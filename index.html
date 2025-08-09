@@ -72,7 +72,9 @@
     .post-actions{display:flex;gap:8px;margin-top:8px}
     .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
     .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
-  #modal-overlay{pointer-events:none}#modal-overlay[open]{pointer-events:auto}
+    /* Overlay pointer-events fix */
+    #modal-overlay{pointer-events:none}
+    #modal-overlay[open]{pointer-events:auto}
   </style>
 </head>
 <body>
@@ -231,14 +233,7 @@
     const routes=['home','assets','worlds','members'];
     const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
     function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
-    document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-route]');
-  if (!el) return;
-  const route = el.getAttribute('data-route');
-  if (!route) return;
-  e.preventDefault();
-  setRoute(route);
-});
+    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); });
     window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
@@ -261,9 +256,7 @@
       if(!input) return;
       const val = getPreferredDisplayName(user);
       if (val) input.value = val;
-      input.addEventListener('input', () => {
-        localStorage.setItem('bmc_display_name', input.value.trim());
-      });
+      input.addEventListener('input', () => { localStorage.setItem('bmc_display_name', input.value.trim()); });
     }
 
     function updateAuthUI(user){
@@ -299,9 +292,8 @@
       const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user){ alert('Please log in.'); return; }
       const current = getPreferredDisplayName(user);
-
       const modal = document.getElementById('modal-overlay');
-      const body = document.getElementById('modal-body');
+      const body  = document.getElementById('modal-body');
       const title = document.getElementById('modal-title');
       title.textContent = 'Profile';
       body.innerHTML = `
@@ -319,8 +311,9 @@
         </div>
       `;
       modal.style.display='grid';
+      modal.setAttribute('open',''); /* important so clicks work */
       document.getElementById('profile-cancel').onclick = closeModal;
-      document.getElementById('profile-save').onclick = saveProfileDisplayName;
+      document.getElementById('profile-save').onclick   = saveProfileDisplayName;
     }
     async function saveProfileDisplayName(){
       const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
@@ -453,8 +446,11 @@
       modal.setAttribute('open','');
     }
     function openEditModal(p){
-      modalTitle.textContent='Edit Post';
-      modalBody.innerHTML = `
+      const modal = document.getElementById('modal-overlay');
+      const body  = document.getElementById('modal-body');
+      const title = document.getElementById('modal-title');
+      title.textContent = 'Edit Post';
+      body.innerHTML = `
         <div style="padding:14px">
           <div class="field"><label>Title</label><input id="edit-title" class="input" type="text" value="${(p.title||'').replace(/"/g,'&quot;')}" /></div>
           <div class="field"><label>Post</label><textarea id="edit-content" class="input" style="min-height:140px">${(p.content||'')}</textarea></div>
@@ -464,6 +460,7 @@
           </div>
         </div>`;
       modal.style.display='grid';
+      modal.setAttribute('open',''); /* important so clicks work */
       document.getElementById('cancel-edit').onclick = closeModal;
       document.getElementById('save-edit').onclick = async () => {
         const title = document.getElementById('edit-title').value.trim();

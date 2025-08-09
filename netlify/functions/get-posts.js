@@ -1,4 +1,4 @@
-// get-posts.js
+// /.netlify/functions/get-posts — hides emails; returns can_manage when caller is logged-in
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async (event, context) => {

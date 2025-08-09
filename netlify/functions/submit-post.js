@@ -1,4 +1,4 @@
-// submit-post.js
+// /.netlify/functions/submit-post — admin/member only, saves role + display name (email hidden)
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') { return { statusCode: 204, headers: corsHeaders() }; }
   if (event.httpMethod !== 'POST') { return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' }; }

@@ -1,4 +1,4 @@
-// delete-post.js
+// /.netlify/functions/delete-post — author or admin can delete
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async (event, context) => {

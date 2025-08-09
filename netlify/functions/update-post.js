@@ -1,4 +1,4 @@
-// update-post.js
+// /.netlify/functions/update-post — simulate edit: create new then delete old (author/admin only)
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async (event, context) => {
