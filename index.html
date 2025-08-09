@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#a78bfa; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35); --glow:0 8px 24px rgba(96,165,250,.45) }
-    *{box-sizing:border-box} html,body{margin:0} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#e5e7eb;line-height:1.6}
-    a{color:var(--accent);text-decoration:none} a:hover{color:#fff}
+    :root { --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#a78bfa; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35) }
+    *{box-sizing:border-box} html,body{margin:0} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+    a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
     .container{max-width:1100px;margin:0 auto;padding:24px}
     header{position:sticky;top:0;background:rgba(11,16,32,.75);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid rgba(148,163,184,.15);z-index:50}
     .nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -27,18 +27,8 @@
     main{padding-top:24px}.panel{background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(15,23,42,.75));border:1px solid rgba(148,163,184,.15);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
     .home-grid{display:grid;gap:18px}
     @media(min-width:980px){
-      .home-grid{
-        grid-template-columns:1.3fr .7fr;
-        grid-template-rows:auto auto auto;
-        grid-template-areas:
-          "left rightTop"
-          "left rightBottom"
-          "left2 rightBottom";
-      }
-      #home-left{grid-area:left}
-      #home-right-top{grid-area:rightTop}
-      #home-right-bottom{grid-area:rightBottom}
-      #home-left-community{grid-area:left2}
+      .home-grid{grid-template-columns:1.3fr .7fr;grid-template-rows:auto auto auto;grid-template-areas:"left rightTop" "left rightBottom" "left2 rightBottom";}
+      #home-left{grid-area:left} #home-right-top{grid-area:rightTop} #home-right-bottom{grid-area:rightBottom} #home-left-community{grid-area:left2}
     }
     .section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:22px}
     .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);color:#cfe3ff}
@@ -51,7 +41,7 @@
     .hidden{display:none} iframe{width:100%;border:0;height:420px;border-radius:12px} .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);font-size:12px;color:#cbd5e1}
     .grid-2{display:grid;gap:14px} @media(min-width:820px){.grid-2{grid-template-columns:repeat(2,1fr)}} .grid-3{display:grid;gap:14px} @media(min-width:1080px){.grid-3{grid-template-columns:repeat(3,1fr)}}
     .spotlight{display:grid;grid-template-columns:160px 1fr;gap:14px;align-items:center}
-    .thumb, .world-thumb {transition: transform .4s ease, box-shadow .4s ease} .thumb:hover, .world-thumb:hover {transform: scale(1.05); box-shadow: var(--glow)}
+    .thumb, .world-thumb {transition: transform .4s ease, box-shadow .4s ease} .thumb:hover, .world-thumb:hover {transform: scale(1.05); box-shadow: 0 8px 24px rgba(96,165,250,.45)}
     .thumb{width:100%;aspect-ratio:16/9;border-radius:12px;background:#0a1228 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1020}
     #find-us{position:fixed;left:18px;bottom:18px;width:240px;padding:14px;background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.8));border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.45);z-index:60}
     @media(max-width:860px){#find-us{position:static;width:auto;margin-top:12px}}
@@ -72,9 +62,7 @@
     .post-actions{display:flex;gap:8px;margin-top:8px}
     .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
     .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
-    /* Overlay pointer-events fix */
-    #modal-overlay{pointer-events:none}
-    #modal-overlay[open]{pointer-events:auto}
+    #modal-overlay{pointer-events:none} #modal-overlay[open]{pointer-events:auto}
   </style>
 </head>
 <body>
@@ -85,8 +73,9 @@
         <button class="tab active" data-route="home">Home</button>
         <button class="tab" data-route="assets">Virtual Assets</button>
         <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
-        <button class="tab" data-route="members">Members</button> <span class="profile-wrap" style="position:relative; display:inline-block">
-          <button id="profile-btn" class="login-btn" type="button" style="display:none">Profile</button>
+        <button class="tab" data-route="members">Members</button>
+        <span class="profile-wrap" style="position:relative; display:inline-block">
+          <button id="profile-btn" class="login-btn" type="button" style="display:inline-block">Log in</button>
           <span id="profile-badge" class="role-badge" style="display:none; position:absolute; top:-6px; right:-6px; pointer-events:none; transform:scale(.9)"></span>
           <div id="profile-menu" class="panel" style="display:none; position:absolute; right:0; top:46px; width:200px; padding:10px; z-index:70">
             <button id="menu-edit" class="btn" type="button" style="width:100%; margin-bottom:8px">Edit Profile</button>
@@ -149,17 +138,16 @@
     <section id="page-assets" class="hidden">
       <div class="panel">
         <h2 class="section-title">Virtual Assets <span class="badge">For Sale</span></h2>
-        <p class="muted">Sign in to access members-only perks like discounts and early drops.</p>
         <div class="grid-3" id="asset-grid">
           <div class="card">
             <h3 style="margin-top:0">Basketball Game</h3>
             <p class="muted">Keeps track of players’ scores and plays VFX and SFX. Perfect for competitive fun in your world.</p>
-            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a><a class="btn members-only" href="#" id="asset1-member" role="button">Members Perk</a></div>
+            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a></div>
           </div>
           <div class="card">
             <h3 style="margin-top:0">Plinko</h3>
-            <p class="muted">Gambling-style minigame: costs points to play and tracks points over time. Great for arcades and events.</p>
-            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a><a class="btn members-only" href="#" id="asset2-member" role="button">Members Perk</a></div>
+            <p class="muted">Gambling-style minigame: costs points to play and tracks points over time.</p>
+            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a></div>
           </div>
         </div>
       </div>
@@ -183,15 +171,43 @@
           </div>
         </div>
       </div>
+
+      <!-- Members-only: World Updates -->
+      <div class="panel members-only" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Post a World Update</h3>
+        <form id="world-post-form">
+          <div class="field">
+            <label for="worldSelect">Which world?</label>
+            <select id="worldSelect" class="input" required></select>
+          </div>
+          <div class="field">
+            <label for="worldPostTitle">Title</label>
+            <input id="worldPostTitle" class="input" type="text" placeholder="Quick headline…" required />
+          </div>
+          <div class="field">
+            <label for="worldPostBody">Update</label>
+            <textarea id="worldPostBody" class="input" placeholder="What’s new for this world?" required></textarea>
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="submit">Post Update</button>
+            <span id="world-post-status" class="muted" aria-live="polite"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Recent World Updates</h3>
+        <div id="world-updates-list" class="list"></div>
+        <div id="world-updates-empty" class="muted">No updates yet.</div>
+      </div>
     </section>
 
     <section id="page-members" class="hidden">
       <div class="panel">
         <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
-        <p class="muted">Only Admins and Members can post. Ask an admin to add the “member” role to your account.</p>
+        <p class="muted">Only Admins and Members can post.</p>
 
         <form name="member-posts" class="members-only" id="post-form">
-          </div>
           <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
           <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
           <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
@@ -206,19 +222,20 @@
       </div>
     </section>
 
+    <!-- Hidden template so Netlify registers fields -->
+    <form name="member-posts" netlify hidden>
+      <input type="text" name="author" />
+      <input type="text" name="title" />
+      <textarea name="content"></textarea>
+      <input type="text" name="role" />
+      <input type="text" name="owner_email" />
+      <input type="text" name="category" />
+      <input type="text" name="world_id" />
+    </form>
+
     <footer class="container">
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>© <span id="year"></span> Bettah Meta Community</span><span class="muted">Site by BMC • Deployed on Netlify</span></div>
     </footer>
-  
-  <!-- Hidden template form so Netlify registers 'member-posts' and its fields -->
-  <form name="member-posts" netlify hidden>
-    <input type="text" name="author" />
-    <input type="text" name="title" />
-    <textarea name="content"></textarea>
-    <input type="text" name="role" />
-    <input type="text" name="owner_email" />
-  </form>
-
   </main>
 
   <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
@@ -251,102 +268,69 @@
     let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
     show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
 
+    // Identity helpers
     const ALLOWED_ROLES = ['admin', 'member'];
     function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
     function hasAllowedRole(user){ return rolesOf(user).some(r=>ALLOWED_ROLES.includes(r)); }
-    const profileBtn=document.getElementById('profile-btn');
-
     function getPreferredDisplayName(user){
       const meta = (user && (user.user_metadata || {})) || {};
       return (meta.displayName || meta.full_name || localStorage.getItem('bmc_display_name') || '').trim();
     }
-    function initDisplayName(user){
-      const input = document.getElementById('displayName');
-      if(!input) return;
-      const val = getPreferredDisplayName(user);
-      if (val) input.value = val;
-      input.addEventListener('input', () => { localStorage.setItem('bmc_display_name', input.value.trim()); });
+
+    // Profile dropdown + badge
+    const profileBtn=document.getElementById('profile-btn');
+    const menu = document.getElementById('profile-menu');
+    function toggleProfileMenu(){ if(!menu) return; menu.style.display = (menu.style.display==='block') ? 'none' : 'block'; }
+    if (profileBtn) {
+      profileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const authed = profileBtn.dataset.authed === '1';
+        if (!authed) { if (window.netlifyIdentity) window.netlifyIdentity.open('login'); return; }
+        toggleProfileMenu();
+      });
     }
+    document.getElementById('menu-edit')?.addEventListener('click', (e)=>{ e.stopPropagation(); menu.style.display='none'; openProfileModal(); });
+    document.getElementById('menu-logout')?.addEventListener('click', async (e)=>{ e.stopPropagation(); menu.style.display='none'; if(window.netlifyIdentity) await window.netlifyIdentity.logout(); });
+    document.addEventListener('click', (e)=>{ const wrap=document.querySelector('.profile-wrap'); if(wrap && !wrap.contains(e.target)) menu.style.display='none'; });
 
     function updateAuthUI(user){
       const postForm=document.getElementById('post-form');
       const chip=document.getElementById('profile-badge');
-      const menu=document.getElementById('profile-menu');
       if(user){
         document.body.classList.add('authed');
-        const roles=(user.app_metadata?.roles||user.user_metadata?.roles||[]).map(r=>String(r).toLowerCase());
+        const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
-        const name = getPreferredDisplayName(user) || user.email || 'Member';
-        if (postForm) postForm.style.display='';
+        if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
-        if (profileBtn){
-          profileBtn.style.display='inline-block';
-          profileBtn.textContent='Profile ▾';
-          profileBtn.dataset.authed='1';
-        }
-        if (menu) menu.style.display='none';
+        if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
       } else {
         document.body.classList.remove('authed');
         if (postForm) postForm.style.display='none';
-        if (chip) chip.style.display='none';
-        if (profileBtn){
-          profileBtn.style.display='inline-block';
-          profileBtn.textContent='Log in';
-          profileBtn.dataset.authed='0';
-        }
-        const menu=document.getElementById('profile-menu'); if (menu) menu.style.display='none';
+        const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
+        if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Log in'; profileBtn.dataset.authed='0'; }
+        if (menu) menu.style.display='none';
       }
     }
-if(window.netlifyIdentity){
-      // Profile dropdown
-      const menu = document.getElementById('profile-menu');
-      function toggleProfileMenu() {
-        if (!menu) return;
-        menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
-      }
-      if (profileBtn) {
-        profileBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const authed = profileBtn.dataset.authed === '1';
-          if (!authed) {
-            if (window.netlifyIdentity) window.netlifyIdentity.open('login');
-            return;
-          }
-          if (!menu) return;
-          menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
-        });
-      }
-      document.getElementById('menu-edit')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.style.display='none';
-        openProfileModal();
-      });
-      document.getElementById('menu-logout')?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        menu.style.display='none';
-        if (window.netlifyIdentity) await window.netlifyIdentity.logout();
-      });
-      document.addEventListener('click', (e) => {
-        if (!menu) return;
-        const wrap = document.querySelector('.profile-wrap');
-        if (wrap && !wrap.contains(e.target)) menu.style.display = 'none';
-      });
-
-      window.netlifyIdentity.on('init', (u)=>{ updateAuthUI(u); initDisplayName(u); });
-      window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); initDisplayName(u); window.netlifyIdentity.close(); });
-      window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); initDisplayName(null); });
+    if(window.netlifyIdentity){
+      window.netlifyIdentity.on('init', (u)=>{ updateAuthUI(u); });
+      window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); window.netlifyIdentity.close(); });
+      window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); });
       window.netlifyIdentity.init();
     }
 
+    // Modal
+    const modal=document.getElementById('modal-overlay');
+    const modalBody=document.getElementById('modal-body');
+    const modalTitle=document.getElementById('modal-title');
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+    function openTrailer(src){ modalTitle.textContent='World Trailer'; modalBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen title="Instagram Reel" style="width:100%;aspect-ratio:16/9;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:14px"></iframe>`; modal.style.display='grid'; modal.setAttribute('open',''); }
     function openProfileModal(){
       const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user){ alert('Please log in.'); return; }
       const current = getPreferredDisplayName(user);
-      const modal = document.getElementById('modal-overlay');
-      const body  = document.getElementById('modal-body');
-      const title = document.getElementById('modal-title');
-      title.textContent = 'Profile';
-      body.innerHTML = `
+      modalTitle.textContent = 'Profile';
+      modalBody.innerHTML = `
         <div style="padding:16px">
           <div class="field">
             <label for="profile-display-name">Display name</label>
@@ -358,10 +342,8 @@ if(window.netlifyIdentity){
             <button id="profile-cancel" class="btn" type="button">Cancel</button>
             <span id="profile-status" class="muted" aria-live="polite"></span>
           </div>
-        </div>
-      `;
-      modal.style.display='grid';
-      modal.setAttribute('open',''); /* important so clicks work */
+        </div>`;
+      modal.style.display='grid'; modal.setAttribute('open','');
       document.getElementById('profile-cancel').onclick = closeModal;
       document.getElementById('profile-save').onclick   = saveProfileDisplayName;
     }
@@ -377,54 +359,24 @@ if(window.netlifyIdentity){
         await user.update({ data: { displayName: name } });
         localStorage.setItem('bmc_display_name', name);
         status.textContent='Saved!';
-        initDisplayName(user);
         setTimeout(()=>{ closeModal(); }, 500);
       }catch(err){
-        console.error(err);
         status.textContent='Failed to save. ' + (err.message || '');
       }
     }
+    function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); }
+    document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
 
+    // Posts: submit secure, delete, update
     const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
-    async function submitSecurePost(title, content, displayName){
+    async function submitSecurePost(title, content, displayName, extra = {}){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user) throw new Error('You must be logged in.');
       const token = await user.jwt(true);
-      const resp = await fetch('/.netlify/functions/submit-post', {  method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content, displayName })  });
-      if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error('Submit failed: ' + resp.status + ' ' + text);
-      }
+      const resp = await fetch('/.netlify/functions/submit-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content, displayName, ...extra }) });
       if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
       return await resp.json();
     }
-    
-    if(postForm){
-      postForm.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        if(postStatus) postStatus.textContent='Posting…';
-        const title=document.getElementById('title')?.value||'';
-        const content=document.getElementById('content')?.value||'';
-        const u=window.netlifyIdentity && window.netlifyIdentity.currentUser();
-        const profileName = getPreferredDisplayName(u);
-        if(!profileName){
-          if(postStatus) postStatus.textContent='Set your display name in Profile first.';
-          openProfileModal();
-          return;
-        }
-        try{
-          console.log('Submitting post', {title, content, profileName}); await submitSecurePost(title, content, profileName);
-          if(postStatus) postStatus.textContent='Thanks! Your post was submitted.';
-          postForm.reset();
-          setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);
-        }catch(err){
-          console.error(err);
-          if(postStatus) postStatus.textContent=err.message||'Could not submit.';
-        }
-      });
-    }
-    
-
     async function deletePost(id){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user) throw new Error('Login required');
@@ -442,13 +394,12 @@ if(window.netlifyIdentity){
       return await resp.json();
     }
 
+    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; const u=window.netlifyIdentity && window.netlifyIdentity.currentUser(); const profileName = getPreferredDisplayName(u); if(!profileName){ if(postStatus) postStatus.textContent='Set your display name in Profile first.'; openProfileModal(); return; } try{ await submitSecurePost(title, content, profileName); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);}catch(err){ if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
+
     async function loadPosts(){
       const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
       try{
-        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-        const resp = u
-          ? await fetch('/.netlify/functions/get-posts', { headers:{ Authorization: 'Bearer ' + await u.jwt(true) } })
-          : await fetch('/.netlify/functions/get-posts');
+        const resp = await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
         if(!resp.ok) throw new Error('Function returned '+resp.status);
         const data=await resp.json();
         list.innerHTML='';
@@ -469,20 +420,13 @@ if(window.netlifyIdentity){
             const editBtn=document.createElement('button'); editBtn.className='sm-btn'; editBtn.textContent='Edit';
             const delBtn=document.createElement('button'); delBtn.className='sm-btn danger'; delBtn.textContent='Delete';
             editBtn.addEventListener('click', ()=> openEditModal(p));
-            delBtn.addEventListener('click', async ()=>{
-              if(!confirm('Delete this post?')) return;
-              try{ await deletePost(p.id); await loadPosts(); await loadHomeFeed(); }catch(e){ alert(e.message); }
-            });
+            delBtn.addEventListener('click', async ()=>{ if(!confirm('Delete this post?')) return; try{ await deletePost(p.id); await loadPosts(); await loadHomeFeed(); }catch(e){ alert(e.message); } });
             actions.appendChild(editBtn); actions.appendChild(delBtn);
             div.appendChild(actions);
           }
-
           list.appendChild(div);
         });
-      }catch(e){
-        console.error('Posts load error:',e);
-        if(errBox){ errBox.textContent='Could not load posts. ('+e.message+')'; errBox.style.display='block'; }
-      }
+      }catch(e){ if(errBox){ errBox.textContent='Could not load posts. ('+e.message+')'; errBox.style.display='block'; } }
     }
 
     async function loadHomeFeed(){
@@ -506,58 +450,60 @@ if(window.netlifyIdentity){
           card.innerHTML = meta + title + body;
           wrap.appendChild(card);
         });
-      }catch(e){
-        console.error('Home feed error:', e);
-        wrap.innerHTML = '<div class="muted">Could not load posts.</div>';
-      }
+      }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts.</div>'; }
     }
 
-    const modal=document.getElementById('modal-overlay');
-    const modalBody=document.getElementById('modal-body');
-    const modalTitle=document.getElementById('modal-title');
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
-
-    function openTrailer(src){
-      modalTitle.textContent='World Trailer';
-      modalBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen title="Instagram Reel" style="width:100%;aspect-ratio:16/9;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:14px"></iframe>`;
-      modal.style.display='grid';
-      modal.setAttribute('open','');
+    // World updates helpers
+    (function initWorldSelect(){
+      const select = document.getElementById('worldSelect');
+      if(!select) return; select.innerHTML='';
+      WORLDS.forEach(w=>{ const opt=document.createElement('option'); opt.value=w.id; opt.textContent=w.title; select.appendChild(opt); });
+    })();
+    (function wireWorldPost(){
+      const form=document.getElementById('world-post-form'); const status=document.getElementById('world-post-status');
+      if(!form) return;
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const u=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const name=getPreferredDisplayName(u);
+        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+        const worldId=document.getElementById('worldSelect').value;
+        const title=document.getElementById('worldPostTitle').value.trim();
+        const body=document.getElementById('worldPostBody').value.trim();
+        if(!worldId || !title || !body){ status.textContent='Please fill everything.'; return; }
+        try{ status.textContent='Posting…'; await submitSecurePost(title, body, name, { category:'worlds', world_id:worldId }); status.textContent='Posted!'; form.reset(); await loadWorldUpdates(); }
+        catch(err){ status.textContent=err.message || 'Could not submit update.'; }
+      });
+    })();
+    async function loadWorldUpdates(){
+      const list=document.getElementById('world-updates-list'); const empty=document.getElementById('world-updates-empty');
+      if(!list || !empty) return;
+      try{
+        const resp=await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const data=await resp.json();
+        const items=(data.items||[]).filter(p => (p.category||'')==='worlds');
+        list.innerHTML='';
+        if(items.length===0){ empty.style.display='block'; return; }
+        empty.style.display='none';
+        const worldTitle=Object.fromEntries(WORLDS.map(w=>[w.id, w.title]));
+        items.forEach(p=>{
+          const div=document.createElement('div'); div.className='post-card';
+          const role=(p.role ? String(p.role) : 'member').toLowerCase();
+          const badge=`<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
+          const world=worldTitle[p.world_id] || 'Unknown World';
+          const meta=`<div class="post-meta">${world} • ${p.author||'Member'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
+          const title=`<h4 style="margin:4px 0 6px">${p.title || '(untitled)'}</h4>`;
+          const body=`<div class="muted">${(p.content||'')}</div>`;
+          div.innerHTML=meta+title+body; list.appendChild(div);
+        });
+      }catch(e){ empty.style.display='block'; }
     }
-    function openEditModal(p){
-      const modal = document.getElementById('modal-overlay');
-      const body  = document.getElementById('modal-body');
-      const title = document.getElementById('modal-title');
-      title.textContent = 'Edit Post';
-      body.innerHTML = `
-        <div style="padding:14px">
-          <div class="field"><label>Title</label><input id="edit-title" class="input" type="text" value="${(p.title||'').replace(/"/g,'&quot;')}" /></div>
-          <div class="field"><label>Post</label><textarea id="edit-content" class="input" style="min-height:140px">${(p.content||'')}</textarea></div>
-          <div class="toolbar">
-            <button id="save-edit" class="btn" type="button">Save</button>
-            <button id="cancel-edit" class="btn" type="button">Cancel</button>
-          </div>
-        </div>`;
-      modal.style.display='grid';
-      modal.setAttribute('open',''); /* important so clicks work */
-      document.getElementById('cancel-edit').onclick = closeModal;
-      document.getElementById('save-edit').onclick = async () => {
-        const title = document.getElementById('edit-title').value.trim();
-        const content = document.getElementById('edit-content').value.trim();
-        try{
-          await updatePost(p.id, title, content);
-          closeModal();
-          await loadPosts();
-          await loadHomeFeed();
-        }catch(e){ alert(e.message); }
-      };
-    }
-    function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); }
+    loadWorldUpdates();
+    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if(el && el.getAttribute('data-route')==='worlds'){ setTimeout(loadWorldUpdates, 250); } });
 
-    document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
-
-    loadPosts();
-    loadHomeFeed();
+    // year
+    const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
   });
   </script>
 </body>
