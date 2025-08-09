@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root { --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#a78bfa; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35); --glow:0 8px 24px rgba(96,165,250,.45) }
-    *{box-sizing:border-box} html,body{margin:0} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+    *{box-sizing:border-box} html,body{margin:0} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#e5e7eb;line-height:1.6}
     a{color:var(--accent);text-decoration:none} a:hover{color:#fff}
     .container{max-width:1100px;margin:0 auto;padding:24px}
     header{position:sticky;top:0;background:rgba(11,16,32,.75);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid rgba(148,163,184,.15);z-index:50}
@@ -46,6 +46,7 @@
     .post-meta{font-size:12px;color:#9aa4b2;margin-bottom:6px}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
     .input, textarea{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb} textarea{min-height:120px;resize:vertical}
+    .hint{font-size:12px;color:#9aa4b2;margin-top:6px}
   </style>
 </head>
 <body>
@@ -148,6 +149,7 @@
       <div class="panel">
         <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
         <p class="muted">Signed-in members can post updates, collab requests, or world announcements. Posts appear below after approval.</p>
+        <p class="hint">If you don't see posts below, your function isn't live yet. Visit <code>/.netlify/functions/get-posts</code> directly to verify JSON is returned.</p>
 
         <form name="member-posts" action="/?no-cache=1" accept-charset="UTF-8" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="members-only" id="post-form">
           <input type="hidden" name="form-name" value="member-posts" />
@@ -161,7 +163,8 @@
         <div style="margin-top:18px">
           <h3 class="section-title" style="font-size:18px">Recent Posts</h3>
           <div id="posts-list" class="list"></div>
-          <div id="posts-empty" class="muted">Posts will appear after you switch this site to a Git-connected deploy with Functions enabled.</div>
+          <div id="posts-empty" class="muted">No posts yet.</div>
+          <div id="posts-error" class="muted" style="display:none"></div>
         </div>
       </div>
     </section>
@@ -184,8 +187,6 @@
       { id:'ora', title:'Outer Rim Arcade', short:'Arcade action, blimps, and weekly game drops.', url:'https://horizon.meta.com/world/520702641129652', img:'https://image2url.com/images/1754644316996-4079296d-1e0c-4a52-81d7-280b7f7896cc.png' },
       { id:'hf', title:'High Fashion', short:'Realistic, unique clothing in the Bettah Meta Mall.', url:'https://horizon.meta.com/world/689215400945041', img:'https://image2url.com/images/1754645693946-71102c27-1b22-480c-8a8f-69973ccef274.jpg' }
     ];
-
-    // Socials set (anchors already have hrefs)
 
     const routes=['home','assets','worlds','members']; const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
     function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
@@ -220,15 +221,19 @@
     }
 
     async function loadPosts(){
-      const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty');
+      const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
       try{
-        const resp = await fetch('/.netlify/functions/get-posts'); if (!resp.ok) throw new Error('Failed to load');
+        const resp = await fetch('/.netlify/functions/get-posts', { headers: { 'cache-control': 'no-cache' } });
+        if (!resp.ok) throw new Error('Function returned '+resp.status);
         const data = await resp.json();
         list.innerHTML='';
-        if (!data || !data.items || data.items.length===0){ empty.style.display='block'; return; }
-        empty.style.display='none';
+        if (!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return; }
+        empty.style.display='none'; errBox.style.display='none';
         data.items.forEach(p=>{ const div=document.createElement('div'); div.className='post-card'; const meta=document.createElement('div'); meta.className='post-meta'; meta.textContent=`${p.author||'Unknown'} • ${new Date(p.created_at).toLocaleString()}`; const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)'; const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||''; div.appendChild(meta); div.appendChild(title); div.appendChild(body); list.appendChild(div); });
-      }catch(e){ console.warn('Function not available yet (need Git/CLI deploy).', e); if (empty){ empty.textContent='Posts will appear after you switch this site to a Git-connected deploy with Functions enabled.'; empty.style.display='block'; } }
+      }catch(e){
+        console.error('Posts load error:', e);
+        if (errBox){ errBox.textContent='Could not load posts. Check that functions are deployed and env vars are set. ('+e.message+')'; errBox.style.display='block'; }
+      }
     }
     loadPosts();
 
