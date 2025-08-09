@@ -2,7 +2,6 @@
   functions = "netlify/functions"
   publish = "/"
 
-# Ensure functions aren't swallowed by SPA redirect
 [[redirects]]
   from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"

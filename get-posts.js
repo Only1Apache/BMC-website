@@ -1,4 +1,4 @@
-// /.netlify/functions/get-posts (CommonJS, robust)
+// /.netlify/functions/get-posts (CommonJS, robust, fixed)
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async () => {
@@ -17,14 +17,15 @@ exports.handler = async () => {
     const formsResp = await fetch(`${apiBase}/sites/${siteId}/forms`, { headers });
     if (!formsResp.ok) throw new Error("Failed to list forms");
     const forms = await formsResp.json();
-    if (!forms.length) return { statusCode: 200, headers: { "content-type": "application/json", "access-control-allow-origin": "*" }, body: JSON.stringify({ items: [] }) };
+    if (!forms.length) {
+      return { statusCode: 200, headers: { "content-type": "application/json", "access-control-allow-origin": "*" }, body: JSON.stringify({ items: [] }) };
+    }
 
-    // Prefer exact name; else fallback to newest form
     const preferred = forms.find(f => f.name === "member-posts") || forms.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))[0];
 
     const subsResp = await fetch(`${apiBase}/forms/${preferred.id}/submissions`, { headers });
     if (!subsResp.ok) throw new Error("Failed to list submissions");
-    const subs = await subs.json();
+    const subs = await subsResp.json();
 
     const items = subs.map(s => ({
       created_at: s.created_at,
