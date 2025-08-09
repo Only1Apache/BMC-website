@@ -1,4 +1,4 @@
-// /.netlify/functions/get-posts (CommonJS, robust)
+// /.netlify/functions/get-posts (CommonJS, robust, fixed)
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async () => {
