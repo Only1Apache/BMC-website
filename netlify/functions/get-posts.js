@@ -1,15 +1,11 @@
-// /.netlify/functions/get-posts (CommonJS, robust, fixed)
+// /.netlify/functions/get-posts (CommonJS)
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async () => {
   const token = process.env.NETLIFY_TOKEN;
-  const siteId = process.env.SITE_ID || process.env.WEB_ID;
+  const siteId = process.env.WEB_ID || process.env.SITE_ID;
   if (!token || !siteId) {
-    return {
-      statusCode: 500,
-      headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
-      body: JSON.stringify({ error: "Missing NETLIFY_TOKEN or SITE_ID/WEB_ID" })
-    };
+    return { statusCode: 500, headers: { "content-type": "application/json", "access-control-allow-origin": "*" }, body: JSON.stringify({ error: "Missing NETLIFY_TOKEN or WEB_ID/SITE_ID" }) };
   }
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -34,16 +30,8 @@ exports.handler = async () => {
       content: (s.data && s.data.content) || ""
     })).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
-    return {
-      statusCode: 200,
-      headers: { "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" },
-      body: JSON.stringify({ items })
-    };
+    return { statusCode: 200, headers: { "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" }, body: JSON.stringify({ items }) };
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
-      body: JSON.stringify({ error: err.message || "Unknown error" })
-    };
+    return { statusCode: 500, headers: { "content-type": "application/json", "access-control-allow-origin": "*" }, body: JSON.stringify({ error: err.message || "Unknown error" }) };
   }
 };

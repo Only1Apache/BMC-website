@@ -46,7 +46,7 @@
     .post-meta{font-size:12px;color:#9aa4b2;margin-bottom:6px}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
     .input, textarea{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb} textarea{min-height:120px;resize:vertical}
-    .hint{font-size:12px;color:#9aa4b2;margin-top:6px}
+    .hint{font-size:12px;color:#94a3b8;margin-top:6px}
   </style>
 </head>
 <body>
@@ -148,13 +148,10 @@
     <section id="page-members" class="hidden">
       <div class="panel">
         <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
-        <p class="muted">Signed-in members can post updates, collab requests, or world announcements. Posts appear below after approval.</p>
+        <p class="muted">Only Official members can post. Ask an admin to add the “official” role to your account.</p>
         <p class="hint">If you don't see posts below, check <code>/.netlify/functions/get-posts</code> returns JSON and your env vars are set.</p>
 
-        <form name="member-posts" action="/?no-cache=1" accept-charset="UTF-8" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="members-only" id="post-form">
-          <input type="hidden" name="form-name" value="member-posts" />
-          <input type="hidden" name="author" id="author" />
-          <p class="hidden"><label>Don’t fill this out: <input name="bot-field" /></label></p>
+        <form name="member-posts" class="members-only" id="post-form">
           <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
           <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
           <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
@@ -174,7 +171,6 @@
     </footer>
   </main>
 
-  <!-- Trailer modal (worlds page only) -->
   <div id="modal-overlay" class="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
     <div class="modal" style="width:min(880px,92vw);background:#0f172a;border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.6)">
       <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(148,163,184,.2)">
@@ -202,57 +198,44 @@
     document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',e=>{ const r=el.getAttribute('data-route'); if(r){ e.preventDefault(); setRoute(r); }}));
     window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
-    // Spotlight + thumbs
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
     let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
     show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
 
-    // Identity
-    const loginBtn = document.getElementById('login-btn');
-    function updateAuthUI(user){ const authorField=document.getElementById('author'); if (user){ document.body.classList.add('authed'); loginBtn.textContent = user.user_metadata?.full_name ? `Log out (${user.user_metadata.full_name})` : 'Log out'; loginBtn.onclick=()=>window.netlifyIdentity.logout(); if(authorField) authorField.value=user.email || user.user_metadata?.full_name || 'Member'; } else { document.body.classList.remove('authed'); loginBtn.textContent='Log in'; loginBtn.onclick=()=>window.netlifyIdentity && window.netlifyIdentity.open('login'); if(authorField) authorField.value=''; } }
-    if (window.netlifyIdentity){ window.netlifyIdentity.on('init', updateAuthUI); window.netlifyIdentity.on('login', (user)=>{ updateAuthUI(user); window.netlifyIdentity.close(); }); window.netlifyIdentity.on('logout', ()=>updateAuthUI(null)); window.netlifyIdentity.init(); }
-
-    // Members: submit
-    const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
-    function encode(data){ return Object.keys(data).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(data[k])).join('&'); }
-    if (postForm){
-      postForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (postStatus) postStatus.textContent='Posting…';
-        const data={ 'form-name': postForm.getAttribute('name'), author: postForm.querySelector('#author')?.value || 'Member', title: postForm.querySelector('#title')?.value || '', content: postForm.querySelector('#content')?.value || '' };
-        try{
-          const resp = await fetch('/', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: encode(data) });
-          if (!resp.ok) throw new Error('Form submission failed: '+resp.status);
-          if (postStatus) postStatus.textContent='Thanks! Your post was submitted.';
-          postForm.reset(); setTimeout(loadPosts, 1200);
-        }catch(err){ console.error(err); if (postStatus) postStatus.textContent='Could not submit (check Netlify Forms is enabled).'; }
-      });
+    // Identity + role-gated UI (official/admin)
+    const ALLOWED_ROLES = ['official', 'admin'];
+    function hasAllowedRole(user){ const roles=(user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); return roles.some(r=>ALLOWED_ROLES.includes(r)); }
+    const loginBtn=document.getElementById('login-btn');
+    function updateAuthUI(user){
+      const postForm=document.getElementById('post-form');
+      if(user){ document.body.classList.add('authed'); const name=user.user_metadata?.full_name||user.email||'Member'; loginBtn.textContent=`Log out (${name})`; loginBtn.onclick=()=>window.netlifyIdentity.logout(); const allowed=hasAllowedRole(user); if(postForm) postForm.style.display=allowed?'':'none';}
+      else { document.body.classList.remove('authed'); loginBtn.textContent='Log in'; loginBtn.onclick=()=>window.netlifyIdentity && window.netlifyIdentity.open('login'); if(postForm) postForm.style.display='none';}
     }
+    if(window.netlifyIdentity){ window.netlifyIdentity.on('init',updateAuthUI); window.netlifyIdentity.on('login',(u)=>{updateAuthUI(u); window.netlifyIdentity.close();}); window.netlifyIdentity.on('logout',()=>updateAuthUI(null)); window.netlifyIdentity.init(); }
 
-    // Members: load
+    // Secure submit via function
+    const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
+    async function submitSecurePost(title, content){
+      const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user) throw new Error('You must be logged in.');
+      const token = await user.jwt(true);
+      const resp = await fetch('/.netlify/functions/submit-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content }) });
+      if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
+      return await resp.json();
+    }
+    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; try{ await submitSecurePost(title, content); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(loadPosts, 1200);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
+
     async function loadPosts(){
       const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
-      try{
-        const resp = await fetch('/.netlify/functions/get-posts', { headers: { 'cache-control': 'no-cache' } });
-        if (!resp.ok) throw new Error('Function returned '+resp.status);
-        const data = await resp.json();
-        list.innerHTML='';
-        if (!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return; }
-        empty.style.display='none'; errBox.style.display='none';
-        data.items.forEach(p=>{ const div=document.createElement('div'); div.className='post-card'; const meta=document.createElement('div'); meta.className='post-meta'; meta.textContent=`${p.author||'Unknown'} • ${new Date(p.created_at).toLocaleString()}`; const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)'; const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||''; div.appendChild(meta); div.appendChild(title); div.appendChild(body); list.appendChild(div); });
-      }catch(e){
-        console.error('Posts load error:', e);
-        if (errBox){ errBox.textContent='Could not load posts. Check that functions are deployed and env vars are set. ('+e.message+')'; errBox.style.display='block'; }
-      }
-    }
+      try{ const resp=await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} }); if(!resp.ok) throw new Error('Function returned '+resp.status); const data=await resp.json(); list.innerHTML=''; if(!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return;} empty.style.display='none'; errBox.style.display='none'; data.items.forEach(p=>{ const div=document.createElement('div'); div.className='post-card'; const meta=document.createElement('div'); meta.className='post-meta'; meta.textContent=`${p.author||'Unknown'} • ${new Date(p.created_at).toLocaleString()}`; const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)'; const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||''; div.appendChild(meta); div.appendChild(title); div.appendChild(body); list.appendChild(div); }); }catch(e){ console.error('Posts load error:',e); if(errBox){ errBox.textContent='Could not load posts. ('+e.message+')'; errBox.style.display='block'; } } }
     loadPosts();
 
-    // Trailer modal (worlds page only)
-    const modal = document.getElementById('modal-overlay'); const iframe = document.getElementById('modal-iframe'); const closeBtn = document.getElementById('modal-close');
-    document.querySelectorAll('.trailer-btn').forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); const src = btn.dataset.embed; iframe.src = src; modal.style.display = 'grid'; }));
-    closeBtn.addEventListener('click', () => { iframe.src = ''; modal.style.display = 'none'; });
-    modal.addEventListener('click', (e) => { if (e.target === modal){ iframe.src=''; modal.style.display = 'none'; } });
+    // Trailer modal
+    const modal=document.getElementById('modal-overlay'); const iframe=document.getElementById('modal-iframe'); const closeBtn=document.getElementById('modal-close');
+    document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; iframe.src=src; modal.style.display='grid'; }));
+    closeBtn.addEventListener('click',()=>{ iframe.src=''; modal.style.display='none'; });
+    modal.addEventListener('click',(e)=>{ if(e.target===modal){ iframe.src=''; modal.style.display='none'; } });
   });
   </script>
 </body>
