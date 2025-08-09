@@ -172,6 +172,40 @@
         </div>
       </div>
 
+      <!-- Members-only: Submit New World -->
+      <div class="panel members-only" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
+        <form id="world-entry-form">
+          <div class="field">
+            <label for="weName">World name</label>
+            <input id="weName" class="input" type="text" placeholder="World title" required />
+          </div>
+          <div class="field">
+            <label for="weDesc">World description</label>
+            <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
+          </div>
+          <div class="field">
+            <label for="weImg">Image URL</label>
+            <input id="weImg" class="input" type="url" placeholder="https://..." required />
+            <div class="hint">Use a direct image link (PNG/JPG).</div>
+          </div>
+          <div class="field">
+            <label for="weUrl">World link</label>
+            <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="submit">Publish World</button>
+            <span id="we-status" class="muted" aria-live="polite"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
+        <div id="community-worlds" class="grid-2"></div>
+        <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
+      </div>
+
       <!-- Members-only: World Updates -->
       <div class="panel members-only" style="margin-top:16px">
         <h3 class="section-title" style="font-size:18px">Post a World Update</h3>
@@ -223,6 +257,7 @@
     </section>
 
     <!-- Hidden template so Netlify registers fields -->
+    <!-- Hidden template so Netlify registers fields -->
     <form name="member-posts" netlify hidden>
       <input type="text" name="author" />
       <input type="text" name="title" />
@@ -231,6 +266,11 @@
       <input type="text" name="owner_email" />
       <input type="text" name="category" />
       <input type="text" name="world_id" />
+      <!-- New world entry fields -->
+      <input type="text" name="world_name" />
+      <input type="text" name="world_desc" />
+      <input type="text" name="world_img" />
+      <input type="text" name="world_url" />
     </form>
 
     <footer class="container">
@@ -501,6 +541,95 @@
     }
     loadWorldUpdates();
     document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if(el && el.getAttribute('data-route')==='worlds'){ setTimeout(loadWorldUpdates, 250); } });
+
+    // --- Community World Entries ---
+    (function wireWorldEntry(){
+      const form = document.getElementById('world-entry-form');
+      const status = document.getElementById('we-status');
+      if(!form) return;
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const name = getPreferredDisplayName(u);
+        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+        const world_name = document.getElementById('weName').value.trim();
+        const world_desc = document.getElementById('weDesc').value.trim();
+        const world_img  = document.getElementById('weImg').value.trim();
+        const world_url  = document.getElementById('weUrl').value.trim();
+        if(!world_name || !world_desc || !world_img || !world_url){ status.textContent='Please complete all fields.'; return; }
+        if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ status.textContent='URLs must start with http(s)://'; return; }
+        try{
+          status.textContent='Publishing…';
+          // Save as a world entry post with structured fields
+          await submitSecurePost(world_name, world_desc, name, {
+            category: 'world_entry',
+            world_name, world_desc, world_img, world_url
+          });
+          status.textContent='Published!';
+          form.reset();
+          await loadCommunityWorlds();
+        }catch(err){
+          console.error(err);
+          status.textContent=err.message || 'Could not publish.';
+        }
+      });
+    })();
+
+    async function loadCommunityWorlds(){
+      const grid = document.getElementById('community-worlds');
+      const empty = document.getElementById('community-worlds-empty');
+      if(!grid || !empty) return;
+      try{
+        const resp = await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const data = await resp.json();
+        const items = (data.items || []).filter(p => (p.category||'')==='world_entry');
+        grid.innerHTML='';
+        if(items.length===0){ empty.style.display='block'; return; }
+        empty.style.display='none';
+        items.forEach(p=>{
+          const name = p.world_name || p.title || 'Untitled';
+          const desc = p.world_desc || p.content || '';
+          const img  = p.world_img  || '';
+          const url  = p.world_url  || '#';
+          const card = document.createElement('div'); card.className='card';
+          const thumb = document.createElement('div'); thumb.className='world-thumb';
+          thumb.style.cssText='width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px';
+          if(img) thumb.style.backgroundImage = `url('${img}')`;
+          const h3 = document.createElement('h3'); h3.style.marginTop='0'; h3.textContent = name;
+          const pdesc = document.createElement('p'); pdesc.className='muted'; pdesc.textContent = desc;
+          const toolbar = document.createElement('div'); toolbar.className='toolbar';
+          const a = document.createElement('a'); a.className='btn'; a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='Explore World';
+          toolbar.appendChild(a);
+          // role badge
+          const role = (p.role ? String(p.role) : 'member').toLowerCase();
+          const badge = document.createElement('span'); badge.className = 'role-badge role-'+role; badge.textContent = role.charAt(0).toUpperCase()+role.slice(1);
+          toolbar.appendChild(badge);
+          // manage actions for owner/admin
+          if (p.can_manage){
+            const del=document.createElement('button'); del.className='sm-btn danger'; del.textContent='Delete';
+            del.addEventListener('click', async ()=>{
+              if(!confirm('Delete this world entry?')) return;
+              try{ await deletePost(p.id); await loadCommunityWorlds(); }catch(e){ alert(e.message); }
+            });
+            toolbar.appendChild(del);
+          }
+          card.appendChild(thumb); card.appendChild(h3); card.appendChild(pdesc); card.appendChild(toolbar);
+          grid.appendChild(card);
+        });
+      }catch(e){
+        console.error('loadCommunityWorlds error', e);
+        empty.style.display='block';
+      }
+    }
+    loadCommunityWorlds();
+    document.addEventListener('click', (e)=>{
+      const el = e.target.closest('[data-route]');
+      if (el && el.getAttribute('data-route')==='worlds'){
+        setTimeout(loadCommunityWorlds, 250);
+      }
+    });
+
 
     // year
     const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();

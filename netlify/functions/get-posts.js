@@ -38,6 +38,10 @@ exports.handler = async (event, context) => {
         role: (s.data && s.data.role) || "member",
         category: (s.data && s.data.category) || "",
         world_id: (s.data && s.data.world_id) || "",
+        world_name: (s.data && s.data.world_name) || "",
+        world_desc: (s.data && s.data.world_desc) || "",
+        world_img: (s.data && s.data.world_img) || "",
+        world_url: (s.data && s.data.world_url) || "",
         can_manage: !!canManage
       };
     }).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
