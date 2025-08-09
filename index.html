@@ -176,6 +176,7 @@
       <div id="world-entry-panel" class="panel members-only" style="margin-top:16px">
         <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
 <p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
+        <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
         <form id="world-entry-form">
           <div class="field">
             <label for="weName">World name</label>
@@ -318,7 +319,17 @@ function isMember(user){ return rolesOf(user).includes('member'); }
         const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
         const worldPanel = document.getElementById('world-entry-panel');
-        if (worldPanel) worldPanel.style.display = roles.includes('member') ? '' : 'none';
+        const weForm = document.getElementById('world-entry-form');
+        const weBanner = document.getElementById('we-banner');
+        const isMem = roles.includes('member');
+        const isAdm = roles.includes('admin');
+        if (worldPanel) worldPanel.style.display = (isMem || isAdm) ? '' : 'none';
+        if (weForm && weBanner){
+          const btn = weForm.querySelector('button[type="submit"]');
+          if (isMem){ btn && (btn.disabled = false); weBanner.style.display='none'; }
+          else if (isAdm){ btn && (btn.disabled = true); weBanner.textContent='Admins can view this form, but only Members can publish world entries.'; weBanner.style.display='block'; }
+          else { btn && (btn.disabled = true); weBanner.textContent='Log in as a Member to publish a world.'; weBanner.style.display='block'; }
+        }
         if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
@@ -419,7 +430,7 @@ function isMember(user){ return rolesOf(user).includes('member'); }
       const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
       try{
         const resp = await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
-        if(!resp.ok) throw new Error('Function returned '+resp.status);
+        if(!resp.ok){ const t = await resp.text(); throw new Error('Function returned '+resp.status+' '+t); }
         const data=await resp.json();
         list.innerHTML='';
         if(!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return; }
@@ -469,7 +480,7 @@ function isMember(user){ return rolesOf(user).includes('member'); }
           card.innerHTML = meta + title + body;
           wrap.appendChild(card);
         });
-      }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts.</div>'; }
+      }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts. '+(e.message||'')+'</div>'; }
     }
 
     // World updates helpers
