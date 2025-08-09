@@ -1,1 +1,163 @@
-<!doctype html><title>BMC</title><p>Missing previous build in sandbox. Ask the assistant to regenerate.</p>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BMC – Bettah Meta Community</title>
+  <meta name="description" content="Official site for the Bettah Meta Community (BMC) — worlds, events, and virtual assets for Meta Horizon Worlds." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#a78bfa; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35) }
+    *{box-sizing:border-box} html,body{margin:0} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+    a{color:var(--accent);text-decoration:none} a:hover{color:#fff}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    header{position:sticky;top:0;background:rgba(11,16,32,.75);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid rgba(148,163,184,.15);z-index:50}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:var(--shadow)}
+    .brand h1{font-size:18px;margin:0}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .tab{padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,rgba(96,165,250,.45),rgba(167,139,250,.45));color:#0b1020;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    .tab.active{outline:2px solid white; box-shadow:0 0 0 2px rgba(255,255,255,.35) inset, 0 12px 26px rgba(96,165,250,.45)}
+    .tab.explore-cta{background: linear-gradient(90deg,#ff0066,#ff9900,#ffee00,#33dd66,#00ccff,#3366ff,#aa33ff,#ff0066);background-size:300% 100%;animation:shimmer 6s linear infinite;color:#0b1020;border-color:rgba(255,255,255,.5)}
+    @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+    main{padding-top:24px}.panel{background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(15,23,42,.75));border:1px solid rgba(148,163,184,.15);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+    .home-grid{display:grid;gap:18px}
+    @media(min-width:980px){.home-grid{grid-template-columns:1.3fr .7fr;grid-template-rows:auto auto;grid-template-areas:"left rightTop" "left rightBottom"} #home-left{grid-area:left} #home-right-top{grid-area:rightTop} #home-right-bottom{grid-area:rightBottom}}
+    .section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:22px}
+    .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);color:#cfe3ff}
+    .card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.12);border-radius:14px;padding:16px}
+    .list{display:grid;gap:10px}.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;background:rgba(15,23,42,.6);border:1px solid rgba(148,163,184,.12)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,rgba(96,165,250,.45),rgba(167,139,250,.45));color:#0b1020;cursor:pointer;box-shadow:var(--shadow);font-weight:700}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px}
+    .muted{color:var(--muted)} footer{margin-top:36px;border-top:1px solid rgba(148,163,184,.15);padding:22px 0;color:var(--muted)}
+    .hidden{display:none} iframe{width:100%;border:0;height:420px;border-radius:12px} .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);font-size:12px;color:#cbd5e1}
+    .grid-2{display:grid;gap:14px} @media(min-width:820px){.grid-2{grid-template-columns:repeat(2,1fr)}} .grid-3{display:grid;gap:14px} @media(min-width:1080px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+    .spotlight{display:grid;grid-template-columns:160px 1fr;gap:14px;align-items:center}
+    .thumb, .world-thumb {transition: transform .4s ease, box-shadow .4s ease} .thumb:hover, .world-thumb:hover {transform: scale(1.05)}
+    .thumb{width:100%;aspect-ratio:16/9;border-radius:12px;background:#0a1228 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1020}
+    #find-us{position:fixed;left:18px;bottom:18px;width:240px;padding:14px;background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.8));border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.45);z-index:60}
+    @media(max-width:860px){#find-us{position:static;width:auto;margin-top:12px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><h1>BMC — Bettah Meta Community</h1></div>
+      <nav class="tabs" aria-label="Primary">
+        <button class="tab active" data-route="home">Home</button>
+        <button class="tab" data-route="assets">Virtual Assets</button>
+        <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HOME -->
+    <section id="page-home" class="home-grid">
+      <div id="home-left" class="panel">
+        <h2 class="section-title">Latest in BMC <span class="badge">News</span></h2>
+        <div class="list" id="news-list">
+          <div class="list-item"><span>🎉 New world drop: <strong>BMC Outer Rim Arcade v2</strong> is live!</span><span class="pill">Aug 2025</span></div>
+          <div class="list-item"><span>🛠 Maintenance: <strong>Cosmos Plaza</strong> lighting pass this weekend.</span><span class="pill">Aug 2025</span></div>
+          <div class="list-item"><span>🏆 Event: <strong>Speed Build Jam</strong> – prizes + shoutouts.</span><span class="pill">Aug 2025</span></div>
+        </div>
+      </div>
+      <aside id="home-right-top" class="panel">
+        <h3 class="section-title">Jump In Now <span class="badge">Worlds Spotlight</span></h3>
+        <div id="spotlight" class="card spotlight">
+          <div class="thumb" id="spotlight-thumb"></div>
+          <div>
+            <h3 id="spotlight-title" style="margin-top:0">Outer Rim Arcade</h3>
+            <p id="spotlight-desc" class="muted" style="margin:0 0 10px">Arcade action, blimps, and weekly game drops.</p>
+            <div class="toolbar">
+              <a id="spotlight-open" class="btn" href="https://horizon.meta.com/world/520702641129652" target="_blank" rel="noopener">Explore World</a>
+              <button id="more-worlds" class="btn" data-route="worlds" type="button">More Worlds</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <aside id="home-right-bottom" class="panel">
+        <h3 class="section-title">Upcoming Events</h3>
+        <iframe id="calendar-frame" title="BMC Event Calendar" src="https://calendar.google.com/calendar/embed?src=krisja678%40gmail.com&ctz=America%2FDenver"></iframe>
+      </aside>
+    </section>
+
+    <aside id="find-us" class="panel">
+      <h3 class="section-title">Find Us</h3>
+      <div class="toolbar">
+        <a class="btn" href="https://discord.gg/4ngj3MncXT" target="_blank" rel="noopener">Discord</a>
+        <a class="btn" href="https://www.instagram.com/only1apachevr/" target="_blank" rel="noopener">Instagram</a>
+        <a class="btn" href="https://www.youtube.com/@Only1ApacheVR" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </aside>
+
+    <!-- ASSETS -->
+    <section id="page-assets" class="hidden">
+      <div class="panel">
+        <h2 class="section-title">Virtual Assets <span class="badge">For Sale</span></h2>
+        <div class="grid-3" id="asset-grid">
+          <div class="card">
+            <h3 style="margin-top:0">Basketball Game</h3>
+            <p class="muted">Keeps track of players’ scores and plays VFX and SFX. Perfect for competitive fun in your world.</p>
+            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a></div>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Plinko</h3>
+            <p class="muted">Gambling-style minigame: costs points to play and tracks points over time. Great for arcades and events.</p>
+            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORLDS -->
+    <section id="page-worlds" class="hidden">
+      <div class="panel">
+        <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
+        <div class="grid-2" id="worlds-grid">
+          <div class="card">
+            <div class="world-thumb" id="world-thumb-ora" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
+            <h3 style="margin-top:0">Outer Rim Arcade</h3>
+            <p class="muted">All New Trimesh Layout • Mobile Dance Floor • New Optimized World.</p>
+            <div class="toolbar"><a class="btn" href="https://horizon.meta.com/world/520702641129652" target="_blank" rel="noopener">Explore World</a><a class="btn" href="https://www.instagram.com/reel/DHCbjn0M2pf/" target="_blank" rel="noopener">Trailer</a></div>
+          </div>
+          <div class="card">
+            <div class="world-thumb" id="world-thumb-hf" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
+            <h3 style="margin-top:0">High Fashion</h3>
+            <p class="muted">Realistic, unique clothing in the Bettah Meta Mall.</p>
+            <div class="toolbar"><a class="btn" href="https://horizon.meta.com/world/689215400945041" target="_blank" rel="noopener">Explore World</a><a class="btn" href="https://www.instagram.com/reel/DL3gueWsmwL/" target="_blank" rel="noopener">Trailer</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="container">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>© <span id="year"></span> Bettah Meta Community</span><span class="muted">Site by BMC • Deployed on Netlify</span></div>
+    </footer>
+  </main>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const WORLDS = [
+      { id:'ora', title:'Outer Rim Arcade', short:'Arcade action, blimps, and weekly game drops.', url:'https://horizon.meta.com/world/520702641129652', img:'https://image2url.com/images/1754644316996-4079296d-1e0c-4a52-81d7-280b7f7896cc.png' },
+      { id:'hf', title:'High Fashion', short:'Realistic, unique clothing in the Bettah Meta Mall.', url:'https://horizon.meta.com/world/689215400945041', img:'https://image2url.com/images/1754645693946-71102c27-1b22-480c-8a8f-69973ccef274.jpg' }
+    ];
+
+    const routes=['home','assets','worlds']; const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds')};
+    function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
+    document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',e=>{ const r=el.getAttribute('data-route'); if(r){ e.preventDefault(); setRoute(r); }}));
+    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
+
+    const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
+    const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
+    let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; if(titleEl) titleEl.textContent=w.title; if(descEl) descEl.textContent=w.short; if(openEl){ openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; } if(thumbEl) thumbEl.style.backgroundImage=`url('${w.img}')`; }
+    show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
+
+    const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
+  });
+  </script>
+</body>
+</html>
