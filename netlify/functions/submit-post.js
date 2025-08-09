@@ -35,6 +35,10 @@ exports.handler = async (event, context) => {
   const worldUrl  = (payload.world_url  || '').trim();
 
   const primaryRole = lowered.includes('admin') ? 'admin' : (lowered.includes('member') ? 'member' : 'user');
+  // World entries are restricted to MEMBERS only (admins cannot create these)
+  if (category === 'world_entry' && primaryRole !== 'member') {
+    return { statusCode: 403, headers: cors(), body: 'Only members can publish world entries.' };
+  }
   const ownerEmail = (user && user.email) ? String(user.email) : '';
 
   const formBody = new URLSearchParams();

@@ -173,8 +173,9 @@
       </div>
 
       <!-- Members-only: Submit New World -->
-      <div class="panel members-only" style="margin-top:16px">
+      <div id="world-entry-panel" class="panel members-only" style="margin-top:16px">
         <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
+<p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
         <form id="world-entry-form">
           <div class="field">
             <label for="weName">World name</label>
@@ -287,6 +288,7 @@
     const ALLOWED_ROLES = ['admin', 'member'];
     function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
     function hasAllowedRole(user){ return rolesOf(user).some(r=>ALLOWED_ROLES.includes(r)); }
+function isMember(user){ return rolesOf(user).includes('member'); }
     function getPreferredDisplayName(user){
       const meta = (user && (user.user_metadata || {})) || {};
       return (meta.displayName || meta.full_name || localStorage.getItem('bmc_display_name') || '').trim();
@@ -315,6 +317,8 @@
         document.body.classList.add('authed');
         const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
+        const worldPanel = document.getElementById('world-entry-panel');
+        if (worldPanel) worldPanel.style.display = roles.includes('member') ? '' : 'none';
         if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
