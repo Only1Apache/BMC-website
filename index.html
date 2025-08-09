@@ -45,6 +45,7 @@
     .card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.12);border-radius:14px;padding:16px}
     .list{display:grid;gap:10px}.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;background:rgba(15,23,42,.6);border:1px solid rgba(148,163,184,.12)}
     .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,rgba(96,165,250,.45),rgba(167,139,250,.45));color:#0b1020;cursor:pointer;box-shadow:var(--shadow);font-weight:700}
+    .btn.danger{background:linear-gradient(135deg, rgba(255,96,96,.45), rgba(255,0,102,.45)); color:#fff}
     .toolbar{display:flex;flex-wrap:wrap;gap:10px}
     .muted{color:#94a3b8} footer{margin-top:36px;border-top:1px solid rgba(148,163,184,.15);padding:22px 0;color:#94a3b8}
     .hidden{display:none} iframe{width:100%;border:0;height:420px;border-radius:12px} .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);font-size:12px;color:#cbd5e1}
@@ -70,6 +71,10 @@
     .mini-card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:12px}
     .mini-title{margin:2px 0 6px;font-size:15px}
     .mini-meta{font-size:12px;color:#9aa4b2;margin-bottom:4px}
+    /* small action buttons */
+    .post-actions{display:flex;gap:8px;margin-top:8px}
+    .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
+    .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
   </style>
 </head>
 <body>
@@ -208,15 +213,14 @@
     </footer>
   </main>
 
-  <div id="modal-overlay" class="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
+  <!-- Modal for trailer and for editing posts -->
+  <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
     <div class="modal" style="width:min(880px,92vw);background:#0f172a;border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.6)">
       <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(148,163,184,.2)">
-        <h4 class="modal-title" style="margin:0">World Trailer</h4>
-        <button id="modal-close" class="modal-close" type="button" style="background:transparent;border:0;color:#e5e7eb;font-size:18px;cursor:pointer">Close ✕</button>
+        <h4 class="modal-title" id="modal-title" style="margin:0">World Trailer</h4>
+        <button id="modal-close" type="button" style="background:transparent;border:0;color:#e5e7eb;font-size:18px;cursor:pointer">Close ✕</button>
       </div>
-      <div class="modal-body" style="padding:0">
-        <iframe id="modal-iframe" class="modal-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen title="Instagram Reel" style="width:100%;aspect-ratio:16/9;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:14px"></iframe>
-      </div>
+      <div class="modal-body" id="modal-body" style="padding:0"></div>
     </div>
   </div>
 
@@ -235,7 +239,7 @@
     document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',e=>{ const r=el.getAttribute('data-route'); if(r){ e.preventDefault(); setRoute(r); }}));
     window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
-    // Worlds visuals
+    // Worlds visuals + spotlight
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
     let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
@@ -243,7 +247,8 @@
 
     // Identity + role UI
     const ALLOWED_ROLES = ['admin', 'member'];
-    function hasAllowedRole(user){ const roles=(user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); return roles.some(r=>ALLOWED_ROLES.includes(r)); }
+    function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
+    function hasAllowedRole(user){ return rolesOf(user).some(r=>ALLOWED_ROLES.includes(r)); }
     const loginBtn=document.getElementById('login-btn');
     function updateAuthUI(user){
       const postForm=document.getElementById('post-form');
@@ -251,7 +256,7 @@
       if(user){
         document.body.classList.add('authed');
         const name=user.user_metadata?.full_name||user.email||'Member';
-        const roles=(user.app_metadata?.roles||user.user_metadata?.roles||[]).map(r=>String(r).toLowerCase());
+        const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
         loginBtn.textContent=`Log out (${name})`;
         loginBtn.onclick=()=>window.netlifyIdentity.logout();
@@ -267,7 +272,7 @@
     }
     if(window.netlifyIdentity){ window.netlifyIdentity.on('init',updateAuthUI); window.netlifyIdentity.on('login',(u)=>{updateAuthUI(u); window.netlifyIdentity.close();}); window.netlifyIdentity.on('logout',()=>updateAuthUI(null)); window.netlifyIdentity.init(); }
 
-    // Secure submit
+    // Members: secure submit
     const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
     async function submitSecurePost(title, content){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
@@ -279,7 +284,33 @@
     }
     if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; try{ await submitSecurePost(title, content); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 1200);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
 
-    // Members page feed
+    // Delete and Edit helpers
+    async function deletePost(id){
+      const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user) throw new Error('Login required');
+      const token = await user.jwt(true);
+      const resp = await fetch('/.netlify/functions/delete-post?id='+encodeURIComponent(id), { method:'DELETE', headers:{ 'Authorization':'Bearer '+token } });
+      if(!resp.ok){ const t=await resp.text(); throw new Error('Delete failed: '+resp.status+' '+t); }
+      return await resp.json();
+    }
+    async function updatePost(id, title, content){
+      const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user) throw new Error('Login required');
+      const token = await user.jwt(true);
+      const resp = await fetch('/.netlify/functions/update-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ id, title, content }) });
+      if(!resp.ok){ const t=await resp.text(); throw new Error('Update failed: '+resp.status+' '+t); }
+      return await resp.json();
+    }
+
+    // Render Members posts with action buttons (only author or admin sees)
+    function canManagePost(post, user){
+      if(!user) return false;
+      const roles=rolesOf(user);
+      if(roles.includes('admin')) return true;
+      const email=user.email;
+      return !!email && (post.email && post.email.toLowerCase()===email.toLowerCase());
+    }
+
     async function loadPosts(){
       const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
       try{
@@ -289,6 +320,7 @@
         list.innerHTML='';
         if(!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return; }
         empty.style.display='none'; errBox.style.display='none';
+        const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
         data.items.forEach(p=>{
           const div=document.createElement('div'); div.className='post-card';
           const meta=document.createElement('div'); meta.className='post-meta';
@@ -297,7 +329,22 @@
           meta.appendChild(badge);
           const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)';
           const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||'';
-          div.appendChild(meta); div.appendChild(title); div.appendChild(body); list.appendChild(div);
+          div.appendChild(meta); div.appendChild(title); div.appendChild(body);
+
+          if (canManagePost(p, user)){
+            const actions=document.createElement('div'); actions.className='post-actions';
+            const editBtn=document.createElement('button'); editBtn.className='sm-btn'; editBtn.textContent='Edit';
+            const delBtn=document.createElement('button'); delBtn.className='sm-btn danger'; delBtn.textContent='Delete';
+            editBtn.addEventListener('click', ()=> openEditModal(p));
+            delBtn.addEventListener('click', async ()=>{
+              if(!confirm('Delete this post?')) return;
+              try{ await deletePost(p.id); await loadPosts(); await loadHomeFeed(); }catch(e){ alert(e.message); }
+            });
+            actions.appendChild(editBtn); actions.appendChild(delBtn);
+            div.appendChild(actions);
+          }
+
+          list.appendChild(div);
         });
       }catch(e){
         console.error('Posts load error:',e);
@@ -305,7 +352,7 @@
       }
     }
 
-    // Home widget feed (last 5)
+    // Home widget feed (read-only)
     async function loadHomeFeed(){
       const wrap = document.getElementById('home-feed-scroll');
       if(!wrap) return;
@@ -333,14 +380,49 @@
       }
     }
 
+    // Edit modal reuses modal overlay
+    const modal=document.getElementById('modal-overlay');
+    const modalBody=document.getElementById('modal-body');
+    const modalTitle=document.getElementById('modal-title');
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+
+    function openTrailer(src){
+      modalTitle.textContent='World Trailer';
+      modalBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen title="Instagram Reel" style="width:100%;aspect-ratio:16/9;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:14px"></iframe>`;
+      modal.style.display='grid';
+    }
+    function openEditModal(p){
+      modalTitle.textContent='Edit Post';
+      modalBody.innerHTML = `
+        <div style="padding:14px">
+          <div class="field"><label>Title</label><input id="edit-title" class="input" type="text" value="${(p.title||'').replace(/"/g,'&quot;')}" /></div>
+          <div class="field"><label>Post</label><textarea id="edit-content" class="input" style="min-height:140px">${(p.content||'')}</textarea></div>
+          <div class="toolbar">
+            <button id="save-edit" class="btn" type="button">Save</button>
+            <button id="cancel-edit" class="btn" type="button">Cancel</button>
+          </div>
+        </div>`;
+      modal.style.display='grid';
+      document.getElementById('cancel-edit').onclick = closeModal;
+      document.getElementById('save-edit').onclick = async () => {
+        const title = document.getElementById('edit-title').value.trim();
+        const content = document.getElementById('edit-content').value.trim();
+        try{
+          await updatePost(p.id, title, content);
+          closeModal();
+          await loadPosts();
+          await loadHomeFeed();
+        }catch(e){ alert(e.message); }
+      };
+    }
+    function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; }
+
+    // Wire trailer buttons
+    document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
+
     loadPosts();
     loadHomeFeed();
-
-    // Trailer modal
-    const modal=document.getElementById('modal-overlay'); const iframe=document.getElementById('modal-iframe'); const closeBtn=document.getElementById('modal-close');
-    document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; iframe.src=src; modal.style.display='grid'; }));
-    closeBtn.addEventListener('click',()=>{ iframe.src=''; modal.style.display='none'; });
-    modal.addEventListener('click',(e)=>{ if(e.target===modal){ iframe.src=''; modal.style.display='none'; } });
   });
   </script>
 </body>

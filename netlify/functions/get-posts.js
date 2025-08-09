@@ -1,4 +1,4 @@
-// /.netlify/functions/get-posts (CommonJS)
+// /.netlify/functions/get-posts (CommonJS) — returns id + email for ownership checks
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async () => {
@@ -24,7 +24,9 @@ exports.handler = async () => {
     const subs = await subsResp.json();
 
     const items = subs.map(s => ({
+      id: s.id,
       created_at: s.created_at,
+      email: s.email || null,
       author: (s.data && s.data.author) || s.email || "Member",
       title: (s.data && s.data.title) || "",
       content: (s.data && s.data.content) || "",
