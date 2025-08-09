@@ -209,6 +209,16 @@
     <footer class="container">
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>© <span id="year"></span> Bettah Meta Community</span><span class="muted">Site by BMC • Deployed on Netlify</span></div>
     </footer>
+  
+  <!-- Hidden template form so Netlify registers 'member-posts' and its fields -->
+  <form name="member-posts" netlify hidden>
+    <input type="text" name="author" />
+    <input type="text" name="title" />
+    <textarea name="content"></textarea>
+    <input type="text" name="role" />
+    <input type="text" name="owner_email" />
+  </form>
+
   </main>
 
   <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
@@ -380,7 +390,11 @@ if(window.netlifyIdentity){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user) throw new Error('You must be logged in.');
       const token = await user.jwt(true);
-      const resp = await fetch('/.netlify/functions/submit-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content, displayName }) });
+      const resp = await fetch('/.netlify/functions/submit-post', {  method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content, displayName })  });
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error('Submit failed: ' + resp.status + ' ' + text);
+      }
       if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
       return await resp.json();
     }
@@ -399,7 +413,7 @@ if(window.netlifyIdentity){
           return;
         }
         try{
-          await submitSecurePost(title, content, profileName);
+          console.log('Submitting post', {title, content, profileName}); await submitSecurePost(title, content, profileName);
           if(postStatus) postStatus.textContent='Thanks! Your post was submitted.';
           postForm.reset();
           setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);
