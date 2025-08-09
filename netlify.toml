@@ -1,6 +1,6 @@
-# Static site — no build step required
 [build]
-  publish = "/"  # or "."
+  functions = "netlify/functions"
+  publish = "/"
 
 [[redirects]]
   from = "/*"
