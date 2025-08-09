@@ -206,32 +206,7 @@
         <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
       </div>
 
-      <!-- Members-only: World Updates -->
-      <div class="panel members-only" style="margin-top:16px">
-        <h3 class="section-title" style="font-size:18px">Post a World Update</h3>
-        <form id="world-post-form">
-          <div class="field">
-            <label for="worldSelect">Which world?</label>
-            <select id="worldSelect" class="input" required></select>
-          </div>
-          <div class="field">
-            <label for="worldPostTitle">Title</label>
-            <input id="worldPostTitle" class="input" type="text" placeholder="Quick headline…" required />
-          </div>
-          <div class="field">
-            <label for="worldPostBody">Update</label>
-            <textarea id="worldPostBody" class="input" placeholder="What’s new for this world?" required></textarea>
-          </div>
-          <div class="toolbar">
-            <button class="btn" type="submit">Post Update</button>
-            <span id="world-post-status" class="muted" aria-live="polite"></span>
-          </div>
-        </form>
-      </div>
-
-      <div class="panel" style="margin-top:16px">
-        <h3 class="section-title" style="font-size:18px">Recent World Updates</h3>
-        <div id="world-updates-list" class="list"></div>
+      
         <div id="world-updates-empty" class="muted">No updates yet.</div>
       </div>
     </section>
@@ -494,54 +469,6 @@
     }
 
     // World updates helpers
-    (function initWorldSelect(){
-      const select = document.getElementById('worldSelect');
-      if(!select) return; select.innerHTML='';
-      WORLDS.forEach(w=>{ const opt=document.createElement('option'); opt.value=w.id; opt.textContent=w.title; select.appendChild(opt); });
-    })();
-    (function wireWorldPost(){
-      const form=document.getElementById('world-post-form'); const status=document.getElementById('world-post-status');
-      if(!form) return;
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const u=window.netlifyIdentity && window.netlifyIdentity.currentUser();
-        const name=getPreferredDisplayName(u);
-        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
-        const worldId=document.getElementById('worldSelect').value;
-        const title=document.getElementById('worldPostTitle').value.trim();
-        const body=document.getElementById('worldPostBody').value.trim();
-        if(!worldId || !title || !body){ status.textContent='Please fill everything.'; return; }
-        try{ status.textContent='Posting…'; await submitSecurePost(title, body, name, { category:'worlds', world_id:worldId }); status.textContent='Posted!'; form.reset(); await loadWorldUpdates(); }
-        catch(err){ status.textContent=err.message || 'Could not submit update.'; }
-      });
-    })();
-    async function loadWorldUpdates(){
-      const list=document.getElementById('world-updates-list'); const empty=document.getElementById('world-updates-empty');
-      if(!list || !empty) return;
-      try{
-        const resp=await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
-        if(!resp.ok) throw new Error('HTTP '+resp.status);
-        const data=await resp.json();
-        const items=(data.items||[]).filter(p => (p.category||'')==='worlds');
-        list.innerHTML='';
-        if(items.length===0){ empty.style.display='block'; return; }
-        empty.style.display='none';
-        const worldTitle=Object.fromEntries(WORLDS.map(w=>[w.id, w.title]));
-        items.forEach(p=>{
-          const div=document.createElement('div'); div.className='post-card';
-          const role=(p.role ? String(p.role) : 'member').toLowerCase();
-          const badge=`<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
-          const world=worldTitle[p.world_id] || 'Unknown World';
-          const meta=`<div class="post-meta">${world} • ${p.author||'Member'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
-          const title=`<h4 style="margin:4px 0 6px">${p.title || '(untitled)'}</h4>`;
-          const body=`<div class="muted">${(p.content||'')}</div>`;
-          div.innerHTML=meta+title+body; list.appendChild(div);
-        });
-      }catch(e){ empty.style.display='block'; }
-    }
-    loadWorldUpdates();
-    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if(el && el.getAttribute('data-route')==='worlds'){ setTimeout(loadWorldUpdates, 250); } });
-
     // --- Community World Entries ---
     (function wireWorldEntry(){
       const form = document.getElementById('world-entry-form');
