@@ -191,10 +191,6 @@
         <p class="muted">Only Admins and Members can post. Ask an admin to add the “member” role to your account.</p>
 
         <form name="member-posts" class="members-only" id="post-form">
-          <div class="field">
-            <label for="displayName">Display name</label>
-            <input class="input" id="displayName" name="displayName" type="text" placeholder="How should your name appear?" required />
-            <div class="hint">This will be shown publicly. You can change it anytime.</div>
           </div>
           <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
           <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
@@ -388,7 +384,32 @@ if(window.netlifyIdentity){
       if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
       return await resp.json();
     }
-    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; const u=window.netlifyIdentity && window.netlifyIdentity.currentUser(); const profileName = getPreferredDisplayName(u); const fieldNameEl = document.getElementById('displayName'); const finalName = (fieldNameEl && fieldNameEl.value.trim()) || profileName || 'Member'; try{ await submitSecurePost(title, content, finalName); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
+    
+    if(postForm){
+      postForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        if(postStatus) postStatus.textContent='Posting…';
+        const title=document.getElementById('title')?.value||'';
+        const content=document.getElementById('content')?.value||'';
+        const u=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const profileName = getPreferredDisplayName(u);
+        if(!profileName){
+          if(postStatus) postStatus.textContent='Set your display name in Profile first.';
+          openProfileModal();
+          return;
+        }
+        try{
+          await submitSecurePost(title, content, profileName);
+          if(postStatus) postStatus.textContent='Thanks! Your post was submitted.';
+          postForm.reset();
+          setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);
+        }catch(err){
+          console.error(err);
+          if(postStatus) postStatus.textContent=err.message||'Could not submit.';
+        }
+      });
+    }
+    
 
     async function deletePost(id){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
