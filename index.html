@@ -85,10 +85,8 @@
         <button class="tab active" data-route="home">Home</button>
         <button class="tab" data-route="assets">Virtual Assets</button>
         <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
-        <button class="tab" data-route="members">Members</button>
-        <button id="login-btn" class="login-btn" type="button">Log in</button>
-        <span class="profile-wrap" style="position:relative; display:inline-block">
-          <button id="profile-btn" class="login-btn" type="button" style="display:none">Profile ▾</button>
+        <button class="tab" data-route="members">Members</button> <span class="profile-wrap" style="position:relative; display:inline-block">
+          <button id="profile-btn" class="login-btn" type="button" style="display:none">Profile</button>
           <span id="profile-badge" class="role-badge" style="display:none; position:absolute; top:-6px; right:-6px; pointer-events:none; transform:scale(.9)"></span>
           <div id="profile-menu" class="panel" style="display:none; position:absolute; right:0; top:46px; width:200px; padding:10px; z-index:70">
             <button id="menu-edit" class="btn" type="button" style="width:100%; margin-bottom:8px">Edit Profile</button>
@@ -250,7 +248,6 @@
     const ALLOWED_ROLES = ['admin', 'member'];
     function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
     function hasAllowedRole(user){ return rolesOf(user).some(r=>ALLOWED_ROLES.includes(r)); }
-    const loginBtn=document.getElementById('login-btn');
     const profileBtn=document.getElementById('profile-btn');
 
     function getPreferredDisplayName(user){
@@ -268,26 +265,33 @@
     function updateAuthUI(user){
       const postForm=document.getElementById('post-form');
       const chip=document.getElementById('profile-badge');
+      const menu=document.getElementById('profile-menu');
       if(user){
         document.body.classList.add('authed');
-        const roles=rolesOf(user);
+        const roles=(user.app_metadata?.roles||user.user_metadata?.roles||[]).map(r=>String(r).toLowerCase());
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
         const name = getPreferredDisplayName(user) || user.email || 'Member';
-        loginBtn.textContent=`Log out (${name})`;
-        loginBtn.onclick=()=>window.netlifyIdentity.logout();
-        if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
+        if (postForm) postForm.style.display='';
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
-        if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.onclick=openProfileModal; }
+        if (profileBtn){
+          profileBtn.style.display='inline-block';
+          profileBtn.textContent='Profile ▾';
+          profileBtn.dataset.authed='1';
+        }
+        if (menu) menu.style.display='none';
       } else {
         document.body.classList.remove('authed');
-        loginBtn.textContent='Log in';
-        loginBtn.onclick=()=>window.netlifyIdentity && window.netlifyIdentity.open('login');
         if (postForm) postForm.style.display='none';
-        const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
-        if (profileBtn) profileBtn.style.display='none';
+        if (chip) chip.style.display='none';
+        if (profileBtn){
+          profileBtn.style.display='inline-block';
+          profileBtn.textContent='Log in';
+          profileBtn.dataset.authed='0';
+        }
+        const menu=document.getElementById('profile-menu'); if (menu) menu.style.display='none';
       }
     }
-    if(window.netlifyIdentity){
+if(window.netlifyIdentity){
       // Profile dropdown
       const menu = document.getElementById('profile-menu');
       function toggleProfileMenu() {
@@ -295,7 +299,16 @@
         menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
       }
       if (profileBtn) {
-        profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleProfileMenu(); });
+        profileBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const authed = profileBtn.dataset.authed === '1';
+          if (!authed) {
+            if (window.netlifyIdentity) window.netlifyIdentity.open('login');
+            return;
+          }
+          if (!menu) return;
+          menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
+        });
       }
       document.getElementById('menu-edit')?.addEventListener('click', (e) => {
         e.stopPropagation();
