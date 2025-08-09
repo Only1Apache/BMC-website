@@ -87,8 +87,14 @@
         <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
         <button class="tab" data-route="members">Members</button>
         <button id="login-btn" class="login-btn" type="button">Log in</button>
-        <button id="profile-btn" class="login-btn" type="button" style="display:none">Profile</button>
-        <span id="role-chip" class="role-badge" style="display:none"></span>
+        <span class="profile-wrap" style="position:relative; display:inline-block">
+          <button id="profile-btn" class="login-btn" type="button" style="display:none">Profile ▾</button>
+          <span id="profile-badge" class="role-badge" style="display:none; position:absolute; top:-6px; right:-6px; pointer-events:none; transform:scale(.9)"></span>
+          <div id="profile-menu" class="panel" style="display:none; position:absolute; right:0; top:46px; width:200px; padding:10px; z-index:70">
+            <button id="menu-edit" class="btn" type="button" style="width:100%; margin-bottom:8px">Edit Profile</button>
+            <button id="menu-logout" class="btn danger" type="button" style="width:100%">Log out</button>
+          </div>
+        </span>
       </nav>
     </div>
   </header>
@@ -261,7 +267,7 @@
 
     function updateAuthUI(user){
       const postForm=document.getElementById('post-form');
-      const chip=document.getElementById('role-chip');
+      const chip=document.getElementById('profile-badge');
       if(user){
         document.body.classList.add('authed');
         const roles=rolesOf(user);
@@ -277,11 +283,36 @@
         loginBtn.textContent='Log in';
         loginBtn.onclick=()=>window.netlifyIdentity && window.netlifyIdentity.open('login');
         if (postForm) postForm.style.display='none';
-        const chip=document.getElementById('role-chip'); if (chip) chip.style.display='none';
+        const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
         if (profileBtn) profileBtn.style.display='none';
       }
     }
     if(window.netlifyIdentity){
+      // Profile dropdown
+      const menu = document.getElementById('profile-menu');
+      function toggleProfileMenu() {
+        if (!menu) return;
+        menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
+      }
+      if (profileBtn) {
+        profileBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleProfileMenu(); });
+      }
+      document.getElementById('menu-edit')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.style.display='none';
+        openProfileModal();
+      });
+      document.getElementById('menu-logout')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        menu.style.display='none';
+        if (window.netlifyIdentity) await window.netlifyIdentity.logout();
+      });
+      document.addEventListener('click', (e) => {
+        if (!menu) return;
+        const wrap = document.querySelector('.profile-wrap');
+        if (wrap && !wrap.contains(e.target)) menu.style.display = 'none';
+      });
+
       window.netlifyIdentity.on('init', (u)=>{ updateAuthUI(u); initDisplayName(u); });
       window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); initDisplayName(u); window.netlifyIdentity.close(); });
       window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); initDisplayName(null); });
@@ -379,7 +410,7 @@
           const div=document.createElement('div'); div.className='post-card';
           const meta=document.createElement('div'); meta.className='post-meta';
           meta.textContent=`${p.author||'Member'} • ${new Date(p.created_at).toLocaleString()} `;
-          const badge=document.createElement('span'); const role=(p.role||'user').toLowerCase(); badge.className=`role-badge role-${role}`; badge.textContent=role.charAt(0).toUpperCase()+role.slice(1);
+          const badge=document.createElement('span'); const role=(p.role ? String(p.role) : 'member').toLowerCase(); badge.className=`role-badge role-${role}`; badge.textContent=role.charAt(0).toUpperCase()+role.slice(1);
           meta.appendChild(badge);
           const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)';
           const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||'';
@@ -418,7 +449,7 @@
         wrap.innerHTML = '';
         items.forEach(p => {
           const card = document.createElement('div'); card.className = 'mini-card';
-          const role = (p.role || 'user').toLowerCase();
+          const role = (p.role ? String(p.role) : 'member').toLowerCase();
           const badge = `<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
           const meta = `<div class="mini-meta">${p.author || 'Member'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
           const title = `<div class="mini-title">${p.title || '(untitled)'}</div>`;
