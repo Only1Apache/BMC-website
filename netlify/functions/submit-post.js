@@ -18,6 +18,12 @@ exports.handler = async (event, context) => {
   const displayName = (payload.displayName || '').trim();
   const category = (payload.category || '').trim();
   const worldId  = (payload.world_id || '').trim();
+  const worldName = (payload.world_name || '').trim();
+  const worldDesc = (payload.world_desc || '').trim();
+  const worldImg  = (payload.world_img  || '').trim();
+  const worldUrl  = (payload.world_url  || '').trim();
+  const category = (payload.category || '').trim();
+  const worldId  = (payload.world_id || '').trim();
   if (!title || !content || !displayName) return { statusCode: 400, headers: cors(), body: 'Missing title/content/displayName' };
 
   const primaryRole = lowered.includes('admin') ? 'admin' : (lowered.includes('member') ? 'member' : 'user');
@@ -30,6 +36,12 @@ exports.handler = async (event, context) => {
   formBody.set('role', primaryRole);
   const ownerEmail = (user && user.email) || '';
   formBody.set('owner_email', ownerEmail);
+  if (category) formBody.set('category', category);
+  if (worldId)  formBody.set('world_id', worldId);
+  if (worldName) formBody.set('world_name', worldName);
+  if (worldDesc) formBody.set('world_desc', worldDesc);
+  if (worldImg)  formBody.set('world_img', worldImg);
+  if (worldUrl)  formBody.set('world_url', worldUrl);
   if (category) formBody.set('category', category);
   if (worldId)  formBody.set('world_id', worldId);
 
