@@ -1,38 +1,43 @@
-// /.netlify/functions/submit-post — admin/member only, stores role
+// submit-post.js
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') { return { statusCode: 204, headers: corsHeaders() }; }
   if (event.httpMethod !== 'POST') { return { statusCode: 405, headers: corsHeaders(), body: 'Method Not Allowed' }; }
 
   const user = context.clientContext && context.clientContext.user;
   const roles = (user && user.app_metadata && user.app_metadata.roles) || [];
+  const lowered = roles.map(r => String(r).toLowerCase());
   const allowedRoles = ['admin', 'member'];
-  const hasAccess = roles.map(r => String(r).toLowerCase()).some(r => allowedRoles.includes(r));
+  const hasAccess = lowered.some(r => allowedRoles.includes(r));
 
-  if (!user) return { statusCode: 401, headers: corsHeaders(), body: 'Unauthorized (login required)' };
+  if (!user)    return { statusCode: 401, headers: corsHeaders(), body: 'Unauthorized (login required)' };
   if (!hasAccess) return { statusCode: 403, headers: corsHeaders(), body: 'Forbidden (admin/member role required)' };
 
   let payload; try{ payload = JSON.parse(event.body || '{}'); }catch(e){ return { statusCode: 400, headers: corsHeaders(), body: 'Invalid JSON body' }; }
   const title = (payload.title || '').trim();
   const content = (payload.content || '').trim();
-  const author = user.email || (user.user_metadata && user.user_metadata.full_name) || 'Member';
-  if (!title || !content) return { statusCode: 400, headers: corsHeaders(), body: 'Missing title/content' };
+  const displayName = (payload.displayName || '').trim();
+  if (!title || !content || !displayName) return { statusCode: 400, headers: corsHeaders(), body: 'Missing title/content/displayName' };
 
-  const lowered = roles.map(r => String(r).toLowerCase());
   const primaryRole = lowered.includes('admin') ? 'admin' : (lowered.includes('member') ? 'member' : 'user');
 
   const formBody = new URLSearchParams();
   formBody.set('form-name', 'member-posts');
-  formBody.set('author', author);
+  formBody.set('author', displayName);
   formBody.set('title', title);
   formBody.set('content', content);
   formBody.set('role', primaryRole);
+  const ownerEmail = (user && user.email) || '';
+  formBody.set('owner_email', ownerEmail);
 
   const host = event.headers['x-forwarded-host'] || event.headers.host;
   const siteUrl = `https://${host}`;
 
   try {
     const resp = await fetch(siteUrl + '/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formBody.toString() });
-    if (!resp.ok) { const text = await resp.text(); return { statusCode: 502, headers: corsHeaders(), body: 'Upstream submit failed: ' + resp.status + ' ' + text }; }
+    if (!resp.ok) {
+      const text = await resp.text();
+      return { statusCode: 502, headers: corsHeaders(), body: 'Upstream submit failed: ' + resp.status + ' ' + text };
+    }
     return { statusCode: 200, headers: corsHeadersJson(), body: JSON.stringify({ ok: true }) };
   } catch (err) {
     return { statusCode: 500, headers: corsHeaders(), body: 'Error: ' + (err.message || 'Unknown') };

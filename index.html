@@ -61,17 +61,14 @@
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
     .input, textarea{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb} textarea{min-height:120px;resize:vertical}
     .hint{font-size:12px;color:#94a3b8;margin-top:6px}
-    /* role badges */
     .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.25);margin-left:8px;vertical-align:middle}
     .role-admin{background:linear-gradient(135deg, rgba(255,0,102,.35), rgba(255,153,0,.35));color:#fff}
     .role-member{background:linear-gradient(135deg, rgba(96,165,250,.35), rgba(167,139,250,.35));color:#fff}
     .role-user{background:rgba(148,163,184,.2);color:#e5e7eb}
-    /* home feed widget */
     .scroll{max-height:260px;overflow:auto;display:grid;gap:10px;padding-right:6px}
     .mini-card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:12px}
     .mini-title{margin:2px 0 6px;font-size:15px}
     .mini-meta{font-size:12px;color:#9aa4b2;margin-bottom:4px}
-    /* small action buttons */
     .post-actions{display:flex;gap:8px;margin-top:8px}
     .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
     .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
@@ -87,15 +84,14 @@
         <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
         <button class="tab" data-route="members">Members</button>
         <button id="login-btn" class="login-btn" type="button">Log in</button>
+        <button id="profile-btn" class="login-btn" type="button" style="display:none">Profile</button>
         <span id="role-chip" class="role-badge" style="display:none"></span>
       </nav>
     </div>
   </header>
 
   <main class="container">
-    <!-- HOME -->
     <section id="page-home" class="home-grid">
-      <!-- Left: Latest in BMC (official news) -->
       <div id="home-left" class="panel">
         <h2 class="section-title">Latest in BMC <span class="badge">News</span></h2>
         <div class="list" id="news-list">
@@ -105,7 +101,6 @@
         </div>
       </div>
 
-      <!-- Left (separate): Community Posts -->
       <div id="home-left-community" class="panel">
         <h3 class="section-title" style="font-size:18px">Community Posts</h3>
         <div id="home-feed-scroll" class="scroll"></div>
@@ -114,7 +109,6 @@
         </div>
       </div>
 
-      <!-- Right-Top: Worlds Spotlight -->
       <aside id="home-right-top" class="panel">
         <h3 class="section-title">Jump In Now <span class="badge">Worlds Spotlight</span></h3>
         <div id="spotlight" class="card spotlight">
@@ -130,7 +124,6 @@
         </div>
       </aside>
 
-      <!-- Right-Bottom: Calendar -->
       <aside id="home-right-bottom" class="panel">
         <h3 class="section-title">Upcoming Events</h3>
         <iframe id="calendar-frame" title="BMC Event Calendar" src="https://calendar.google.com/calendar/embed?src=krisja678%40gmail.com&ctz=America%2FDenver"></iframe>
@@ -146,7 +139,6 @@
       </div>
     </aside>
 
-    <!-- ASSETS -->
     <section id="page-assets" class="hidden">
       <div class="panel">
         <h2 class="section-title">Virtual Assets <span class="badge">For Sale</span></h2>
@@ -166,7 +158,6 @@
       </div>
     </section>
 
-    <!-- WORLDS -->
     <section id="page-worlds" class="hidden">
       <div class="panel">
         <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
@@ -187,13 +178,17 @@
       </div>
     </section>
 
-    <!-- MEMBERS -->
     <section id="page-members" class="hidden">
       <div class="panel">
         <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
         <p class="muted">Only Admins and Members can post. Ask an admin to add the “member” role to your account.</p>
 
         <form name="member-posts" class="members-only" id="post-form">
+          <div class="field">
+            <label for="displayName">Display name</label>
+            <input class="input" id="displayName" name="displayName" type="text" placeholder="How should your name appear?" required />
+            <div class="hint">This will be shown publicly. You can change it anytime.</div>
+          </div>
           <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
           <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
           <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
@@ -213,7 +208,6 @@
     </footer>
   </main>
 
-  <!-- Modal for trailer and for editing posts -->
   <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
     <div class="modal" style="width:min(880px,92vw);background:#0f172a;border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.6)">
       <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(148,163,184,.2)">
@@ -239,52 +233,118 @@
     document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',e=>{ const r=el.getAttribute('data-route'); if(r){ e.preventDefault(); setRoute(r); }}));
     window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
-    // Worlds visuals + spotlight
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
     let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
     show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
 
-    // Identity + role UI
     const ALLOWED_ROLES = ['admin', 'member'];
     function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
     function hasAllowedRole(user){ return rolesOf(user).some(r=>ALLOWED_ROLES.includes(r)); }
     const loginBtn=document.getElementById('login-btn');
+    const profileBtn=document.getElementById('profile-btn');
+
+    function getPreferredDisplayName(user){
+      const meta = (user && (user.user_metadata || {})) || {};
+      return (meta.displayName || meta.full_name || localStorage.getItem('bmc_display_name') || '').trim();
+    }
+    function initDisplayName(user){
+      const input = document.getElementById('displayName');
+      if(!input) return;
+      const val = getPreferredDisplayName(user);
+      if (val) input.value = val;
+      input.addEventListener('input', () => {
+        localStorage.setItem('bmc_display_name', input.value.trim());
+      });
+    }
+
     function updateAuthUI(user){
       const postForm=document.getElementById('post-form');
       const chip=document.getElementById('role-chip');
       if(user){
         document.body.classList.add('authed');
-        const name=user.user_metadata?.full_name||user.email||'Member';
         const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
+        const name = getPreferredDisplayName(user) || user.email || 'Member';
         loginBtn.textContent=`Log out (${name})`;
         loginBtn.onclick=()=>window.netlifyIdentity.logout();
         if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
+        if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.onclick=openProfileModal; }
       } else {
         document.body.classList.remove('authed');
         loginBtn.textContent='Log in';
         loginBtn.onclick=()=>window.netlifyIdentity && window.netlifyIdentity.open('login');
         if (postForm) postForm.style.display='none';
         const chip=document.getElementById('role-chip'); if (chip) chip.style.display='none';
+        if (profileBtn) profileBtn.style.display='none';
       }
     }
-    if(window.netlifyIdentity){ window.netlifyIdentity.on('init',updateAuthUI); window.netlifyIdentity.on('login',(u)=>{updateAuthUI(u); window.netlifyIdentity.close();}); window.netlifyIdentity.on('logout',()=>updateAuthUI(null)); window.netlifyIdentity.init(); }
+    if(window.netlifyIdentity){
+      window.netlifyIdentity.on('init', (u)=>{ updateAuthUI(u); initDisplayName(u); });
+      window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); initDisplayName(u); window.netlifyIdentity.close(); });
+      window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); initDisplayName(null); });
+      window.netlifyIdentity.init();
+    }
 
-    // Members: secure submit
+    function openProfileModal(){
+      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user){ alert('Please log in.'); return; }
+      const current = getPreferredDisplayName(user);
+
+      const modal = document.getElementById('modal-overlay');
+      const body = document.getElementById('modal-body');
+      const title = document.getElementById('modal-title');
+      title.textContent = 'Profile';
+      body.innerHTML = `
+        <div style="padding:16px">
+          <div class="field">
+            <label for="profile-display-name">Display name</label>
+            <input id="profile-display-name" class="input" type="text" placeholder="How should your name appear?" value="${(current||'').replace(/"/g,'&quot;')}" />
+            <div class="hint">Saved to your account. New posts will use this by default.</div>
+          </div>
+          <div class="toolbar">
+            <button id="profile-save" class="btn" type="button">Save</button>
+            <button id="profile-cancel" class="btn" type="button">Cancel</button>
+            <span id="profile-status" class="muted" aria-live="polite"></span>
+          </div>
+        </div>
+      `;
+      modal.style.display='grid';
+      document.getElementById('profile-cancel').onclick = closeModal;
+      document.getElementById('profile-save').onclick = saveProfileDisplayName;
+    }
+    async function saveProfileDisplayName(){
+      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user){ alert('Please log in.'); return; }
+      const input = document.getElementById('profile-display-name');
+      const status = document.getElementById('profile-status');
+      const name = (input.value || '').trim();
+      if(!name){ status.textContent='Please enter a display name.'; return; }
+      try{
+        status.textContent='Saving…';
+        await user.update({ data: { displayName: name } });
+        localStorage.setItem('bmc_display_name', name);
+        status.textContent='Saved!';
+        initDisplayName(user);
+        setTimeout(()=>{ closeModal(); }, 500);
+      }catch(err){
+        console.error(err);
+        status.textContent='Failed to save. ' + (err.message || '');
+      }
+    }
+
     const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
-    async function submitSecurePost(title, content){
+    async function submitSecurePost(title, content, displayName){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user) throw new Error('You must be logged in.');
       const token = await user.jwt(true);
-      const resp = await fetch('/.netlify/functions/submit-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content }) });
+      const resp = await fetch('/.netlify/functions/submit-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content, displayName }) });
       if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
       return await resp.json();
     }
-    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; try{ await submitSecurePost(title, content); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 1200);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
+    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; const u=window.netlifyIdentity && window.netlifyIdentity.currentUser(); const profileName = getPreferredDisplayName(u); const fieldNameEl = document.getElementById('displayName'); const finalName = (fieldNameEl && fieldNameEl.value.trim()) || profileName || 'Member'; try{ await submitSecurePost(title, content, finalName); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
 
-    // Delete and Edit helpers
     async function deletePost(id){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
       if(!user) throw new Error('Login required');
@@ -302,36 +362,29 @@
       return await resp.json();
     }
 
-    // Render Members posts with action buttons (only author or admin sees)
-    function canManagePost(post, user){
-      if(!user) return false;
-      const roles=rolesOf(user);
-      if(roles.includes('admin')) return true;
-      const email=user.email;
-      return !!email && (post.email && post.email.toLowerCase()===email.toLowerCase());
-    }
-
     async function loadPosts(){
       const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
       try{
-        const resp=await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
+        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const resp = u
+          ? await fetch('/.netlify/functions/get-posts', { headers:{ Authorization: 'Bearer ' + await u.jwt(true) } })
+          : await fetch('/.netlify/functions/get-posts');
         if(!resp.ok) throw new Error('Function returned '+resp.status);
         const data=await resp.json();
         list.innerHTML='';
         if(!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return; }
         empty.style.display='none'; errBox.style.display='none';
-        const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
         data.items.forEach(p=>{
           const div=document.createElement('div'); div.className='post-card';
           const meta=document.createElement('div'); meta.className='post-meta';
-          meta.textContent=`${p.author||'Unknown'} • ${new Date(p.created_at).toLocaleString()} `;
+          meta.textContent=`${p.author||'Member'} • ${new Date(p.created_at).toLocaleString()} `;
           const badge=document.createElement('span'); const role=(p.role||'user').toLowerCase(); badge.className=`role-badge role-${role}`; badge.textContent=role.charAt(0).toUpperCase()+role.slice(1);
           meta.appendChild(badge);
           const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)';
           const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||'';
           div.appendChild(meta); div.appendChild(title); div.appendChild(body);
 
-          if (canManagePost(p, user)){
+          if (p.can_manage){
             const actions=document.createElement('div'); actions.className='post-actions';
             const editBtn=document.createElement('button'); editBtn.className='sm-btn'; editBtn.textContent='Edit';
             const delBtn=document.createElement('button'); delBtn.className='sm-btn danger'; delBtn.textContent='Delete';
@@ -352,7 +405,6 @@
       }
     }
 
-    // Home widget feed (read-only)
     async function loadHomeFeed(){
       const wrap = document.getElementById('home-feed-scroll');
       if(!wrap) return;
@@ -367,8 +419,8 @@
           const card = document.createElement('div'); card.className = 'mini-card';
           const role = (p.role || 'user').toLowerCase();
           const badge = `<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
-          const meta = `<div class="mini-meta">${p.author || 'Unknown'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
-          const title = `<div class="mini-title">${p.title || '(untitled)'}</div>`;
+          const meta = `<div class="mini-meta">${p.author || 'Member'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
+          const title = `<div class="mini-title">${p.title || '(untitled)')}</div>`;
           const text = (p.content || '').replace(/\s+/g,' ').trim();
           const body = `<div class="muted">${text.length > 160 ? text.slice(0,160) + '…' : text}</div>`;
           card.innerHTML = meta + title + body;
@@ -380,7 +432,6 @@
       }
     }
 
-    // Edit modal reuses modal overlay
     const modal=document.getElementById('modal-overlay');
     const modalBody=document.getElementById('modal-body');
     const modalTitle=document.getElementById('modal-title');
@@ -418,7 +469,6 @@
     }
     function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; }
 
-    // Wire trailer buttons
     document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
 
     loadPosts();
