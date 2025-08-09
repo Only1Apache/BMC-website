@@ -72,6 +72,7 @@
     .post-actions{display:flex;gap:8px;margin-top:8px}
     .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
     .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
+  #modal-overlay{pointer-events:none}#modal-overlay[open]{pointer-events:auto}
   </style>
 </head>
 <body>
@@ -230,7 +231,14 @@
     const routes=['home','assets','worlds','members'];
     const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
     function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
-    document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',e=>{ const r=el.getAttribute('data-route'); if(r){ e.preventDefault(); setRoute(r); }}));
+    document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-route]');
+  if (!el) return;
+  const route = el.getAttribute('data-route');
+  if (!route) return;
+  e.preventDefault();
+  setRoute(route);
+});
     window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
@@ -420,7 +428,7 @@
           const role = (p.role || 'user').toLowerCase();
           const badge = `<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
           const meta = `<div class="mini-meta">${p.author || 'Member'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
-          const title = `<div class="mini-title">${p.title || '(untitled)')}</div>`;
+          const title = `<div class="mini-title">${p.title || '(untitled)'}</div>`;
           const text = (p.content || '').replace(/\s+/g,' ').trim();
           const body = `<div class="muted">${text.length > 160 ? text.slice(0,160) + '…' : text}</div>`;
           card.innerHTML = meta + title + body;
@@ -442,6 +450,7 @@
       modalTitle.textContent='World Trailer';
       modalBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen title="Instagram Reel" style="width:100%;aspect-ratio:16/9;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:14px"></iframe>`;
       modal.style.display='grid';
+      modal.setAttribute('open','');
     }
     function openEditModal(p){
       modalTitle.textContent='Edit Post';
@@ -467,7 +476,7 @@
         }catch(e){ alert(e.message); }
       };
     }
-    function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; }
+    function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); }
 
     document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
 
