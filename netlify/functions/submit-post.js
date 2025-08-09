@@ -15,16 +15,14 @@ exports.handler = async (event, context) => {
   let payload; try{ payload = JSON.parse(event.body || '{}'); }catch(e){ return { statusCode: 400, headers: cors(), body: 'Invalid JSON body' }; }
   const title = (payload.title || '').trim();
   const content = (payload.content || '').trim();
-  const displayName = (payload.displayName || '').trim();
+  \1
   const category = (payload.category || '').trim();
   const worldId  = (payload.world_id || '').trim();
   const worldName = (payload.world_name || '').trim();
   const worldDesc = (payload.world_desc || '').trim();
   const worldImg  = (payload.world_img  || '').trim();
   const worldUrl  = (payload.world_url  || '').trim();
-  const category = (payload.category || '').trim();
-  const worldId  = (payload.world_id || '').trim();
-  if (!title || !content || !displayName) return { statusCode: 400, headers: cors(), body: 'Missing title/content/displayName' };
+if (!title || !content || !displayName) return { statusCode: 400, headers: cors(), body: 'Missing title/content/displayName' };
 
   const primaryRole = lowered.includes('admin') ? 'admin' : (lowered.includes('member') ? 'member' : 'user');
 
@@ -42,10 +40,9 @@ exports.handler = async (event, context) => {
   if (worldDesc) formBody.set('world_desc', worldDesc);
   if (worldImg)  formBody.set('world_img', worldImg);
   if (worldUrl)  formBody.set('world_url', worldUrl);
-  if (category) formBody.set('category', category);
+if (category) formBody.set('category', category);
   if (worldId)  formBody.set('world_id', worldId);
-
-  const host = event.headers['x-forwarded-host'] || event.headers.host;
+const host = event.headers['x-forwarded-host'] || event.headers.host;
   const siteUrl = `https://${host}`;
 
   try {
