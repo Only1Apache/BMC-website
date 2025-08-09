@@ -26,7 +26,20 @@
     .login-btn{margin-left:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer}
     main{padding-top:24px}.panel{background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(15,23,42,.75));border:1px solid rgba(148,163,184,.15);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
     .home-grid{display:grid;gap:18px}
-    @media(min-width:980px){.home-grid{grid-template-columns:1.3fr .7fr;grid-template-rows:auto auto;grid-template-areas:"left rightTop" "left rightBottom"} #home-left{grid-area:left} #home-right-top{grid-area:rightTop} #home-right-bottom{grid-area:rightBottom}}
+    @media(min-width:980px){
+      .home-grid{
+        grid-template-columns:1.3fr .7fr;
+        grid-template-rows:auto auto auto;
+        grid-template-areas:
+          "left rightTop"
+          "left rightBottom"
+          "left2 rightBottom";
+      }
+      #home-left{grid-area:left}
+      #home-right-top{grid-area:rightTop}
+      #home-right-bottom{grid-area:rightBottom}
+      #home-left-community{grid-area:left2}
+    }
     .section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:22px}
     .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);color:#cfe3ff}
     .card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.12);border-radius:14px;padding:16px}
@@ -52,6 +65,11 @@
     .role-admin{background:linear-gradient(135deg, rgba(255,0,102,.35), rgba(255,153,0,.35));color:#fff}
     .role-member{background:linear-gradient(135deg, rgba(96,165,250,.35), rgba(167,139,250,.35));color:#fff}
     .role-user{background:rgba(148,163,184,.2);color:#e5e7eb}
+    /* home feed widget */
+    .scroll{max-height:260px;overflow:auto;display:grid;gap:10px;padding-right:6px}
+    .mini-card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:12px}
+    .mini-title{margin:2px 0 6px;font-size:15px}
+    .mini-meta{font-size:12px;color:#9aa4b2;margin-bottom:4px}
   </style>
 </head>
 <body>
@@ -72,6 +90,7 @@
   <main class="container">
     <!-- HOME -->
     <section id="page-home" class="home-grid">
+      <!-- Left: Latest in BMC (official news) -->
       <div id="home-left" class="panel">
         <h2 class="section-title">Latest in BMC <span class="badge">News</span></h2>
         <div class="list" id="news-list">
@@ -80,6 +99,17 @@
           <div class="list-item"><span>🏆 Event: <strong>Speed Build Jam</strong> – prizes + shoutouts.</span><span class="pill">Aug 2025</span></div>
         </div>
       </div>
+
+      <!-- Left (separate): Community Posts -->
+      <div id="home-left-community" class="panel">
+        <h3 class="section-title" style="font-size:18px">Community Posts</h3>
+        <div id="home-feed-scroll" class="scroll"></div>
+        <div class="toolbar" style="margin-top:10px">
+          <a class="btn" data-route="members" href="#members">View more</a>
+        </div>
+      </div>
+
+      <!-- Right-Top: Worlds Spotlight -->
       <aside id="home-right-top" class="panel">
         <h3 class="section-title">Jump In Now <span class="badge">Worlds Spotlight</span></h3>
         <div id="spotlight" class="card spotlight">
@@ -94,6 +124,8 @@
           </div>
         </div>
       </aside>
+
+      <!-- Right-Bottom: Calendar -->
       <aside id="home-right-bottom" class="panel">
         <h3 class="section-title">Upcoming Events</h3>
         <iframe id="calendar-frame" title="BMC Event Calendar" src="https://calendar.google.com/calendar/embed?src=krisja678%40gmail.com&ctz=America%2FDenver"></iframe>
@@ -203,12 +235,13 @@
     document.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',e=>{ const r=el.getAttribute('data-route'); if(r){ e.preventDefault(); setRoute(r); }}));
     window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
+    // Worlds visuals
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
     let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
     show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
 
-    // Identity + role-gated UI (admin/member) + header chip
+    // Identity + role UI
     const ALLOWED_ROLES = ['admin', 'member'];
     function hasAllowedRole(user){ const roles=(user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); return roles.some(r=>ALLOWED_ROLES.includes(r)); }
     const loginBtn=document.getElementById('login-btn');
@@ -234,7 +267,7 @@
     }
     if(window.netlifyIdentity){ window.netlifyIdentity.on('init',updateAuthUI); window.netlifyIdentity.on('login',(u)=>{updateAuthUI(u); window.netlifyIdentity.close();}); window.netlifyIdentity.on('logout',()=>updateAuthUI(null)); window.netlifyIdentity.init(); }
 
-    // Secure submit via function
+    // Secure submit
     const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
     async function submitSecurePost(title, content){
       const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
@@ -244,8 +277,9 @@
       if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
       return await resp.json();
     }
-    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; try{ await submitSecurePost(title, content); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(loadPosts, 1200);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
+    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; try{ await submitSecurePost(title, content); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 1200);}catch(err){ console.error(err); if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
 
+    // Members page feed
     async function loadPosts(){
       const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
       try{
@@ -270,7 +304,37 @@
         if(errBox){ errBox.textContent='Could not load posts. ('+e.message+')'; errBox.style.display='block'; }
       }
     }
+
+    // Home widget feed (last 5)
+    async function loadHomeFeed(){
+      const wrap = document.getElementById('home-feed-scroll');
+      if(!wrap) return;
+      try{
+        const resp = await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const data = await resp.json();
+        const items = (data.items || []).slice(0,5);
+        if(items.length === 0){ wrap.innerHTML = '<div class="muted">No posts yet.</div>'; return; }
+        wrap.innerHTML = '';
+        items.forEach(p => {
+          const card = document.createElement('div'); card.className = 'mini-card';
+          const role = (p.role || 'user').toLowerCase();
+          const badge = `<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
+          const meta = `<div class="mini-meta">${p.author || 'Unknown'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
+          const title = `<div class="mini-title">${p.title || '(untitled)'}</div>`;
+          const text = (p.content || '').replace(/\s+/g,' ').trim();
+          const body = `<div class="muted">${text.length > 160 ? text.slice(0,160) + '…' : text}</div>`;
+          card.innerHTML = meta + title + body;
+          wrap.appendChild(card);
+        });
+      }catch(e){
+        console.error('Home feed error:', e);
+        wrap.innerHTML = '<div class="muted">Could not load posts.</div>';
+      }
+    }
+
     loadPosts();
+    loadHomeFeed();
 
     // Trailer modal
     const modal=document.getElementById('modal-overlay'); const iframe=document.getElementById('modal-iframe'); const closeBtn=document.getElementById('modal-close');
