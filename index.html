@@ -173,31 +173,9 @@
       </div>
 
       <!-- Members-only: Submit New World -->
-
-      <div class="panel" style="margin-top:16px">
-        <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
-        <div id="community-worlds" class="grid-2"></div>
-        <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
-      </div>
-
-      
-        <div id="world-updates-empty" class="muted">No updates yet.</div>
-      </div>
-    </section>
-
-    <section id="page-members" class="hidden">
-      <div class="panel">
-        <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
-        <p class="muted">Only Admins and Members can post.</p>
-
-        
-      <!-- Members-only: Submit New World (moved here from Worlds page) -->
       <div id="world-entry-panel" class="panel members-only" style="margin-top:16px">
         <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
-        <p class="muted" style="margin-top:6px;margin-bottom:10px">
-          Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them.
-          Include a clear name, a short description, a direct image URL, and the world link.
-        </p>
+<p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
         <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
         <form id="world-entry-form">
           <div class="field">
@@ -223,7 +201,24 @@
           </div>
         </form>
       </div>
-<form name="member-posts" class="members-only" id="post-form">
+
+      <div class="panel" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
+        <div id="community-worlds" class="grid-2"></div>
+        <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
+      </div>
+
+      
+        <div id="world-updates-empty" class="muted">No updates yet.</div>
+      </div>
+    </section>
+
+    <section id="page-members" class="hidden">
+      <div class="panel">
+        <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
+        <p class="muted">Only Admins and Members can post.</p>
+
+        <form name="member-posts" class="members-only" id="post-form">
           <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
           <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
           <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
@@ -282,8 +277,8 @@
     const routes=['home','assets','worlds','members'];
     const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
     function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
-    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); });
-    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
+    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); if (route === 'home') { try { loadHomeFeed(); } catch(e){} } });
+window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
@@ -622,7 +617,11 @@ function isMember(user){ return rolesOf(user).includes('member'); }
       };
     }
     
-    // year
+    // Ensure home feed loads immediately and on window load
+try { loadHomeFeed(); } catch(e){}
+window.addEventListener('load', () => { try { loadHomeFeed(); } catch(e){} });
+
+// year
     const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
   });
   </script>
