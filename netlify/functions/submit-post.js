@@ -1,4 +1,4 @@
-// /.netlify/functions/submit-post — members/admins only
+// /.netlify/functions/submit-post — members/admins only; supports world_entry meta
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: cors() };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: cors(), body: 'Method Not Allowed' };
@@ -13,20 +13,13 @@ exports.handler = async (event, context) => {
   if (!hasAccess) return { statusCode: 403, headers: cors(), body: 'Forbidden (admin/member role required)' };
 
   let payload;
-  try {
-    payload = JSON.parse(event.body || '{}');
-  } catch (e) {
-    return { statusCode: 400, headers: cors(), body: 'Invalid JSON body' };
-  }
+  try { payload = JSON.parse(event.body || '{}'); } catch (e) { return { statusCode: 400, headers: cors(), body: 'Invalid JSON body' }; }
 
   const title = (payload.title || '').trim();
   const content = (payload.content || '').trim();
   const displayName = (payload.displayName || '').trim();
-  if (!title || !content || !displayName) {
-    return { statusCode: 400, headers: cors(), body: 'Missing title/content/displayName' };
-  }
+  if (!title || !content || !displayName) return { statusCode: 400, headers: cors(), body: 'Missing title/content/displayName' };
 
-  // Optional meta fields
   const category  = (payload.category   || '').trim();
   const worldId   = (payload.world_id   || '').trim();
   const worldName = (payload.world_name || '').trim();
@@ -35,7 +28,6 @@ exports.handler = async (event, context) => {
   const worldUrl  = (payload.world_url  || '').trim();
 
   const primaryRole = lowered.includes('admin') ? 'admin' : (lowered.includes('member') ? 'member' : 'user');
-  // World entries are restricted to MEMBERS only (admins cannot create these)
   if (category === 'world_entry' && primaryRole !== 'member') {
     return { statusCode: 403, headers: cors(), body: 'Only members can publish world entries.' };
   }
@@ -55,31 +47,16 @@ exports.handler = async (event, context) => {
   if (worldImg)  formBody.set('world_img', worldImg);
   if (worldUrl)  formBody.set('world_url', worldUrl);
 
-  // Submit to site root to create a Netlify Forms submission
   const host = event.headers['x-forwarded-host'] || event.headers.host;
   const siteUrl = `https://${host}`;
 
   try {
-    const resp = await fetch(siteUrl + '/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formBody.toString()
-    });
-    if (!resp.ok) {
-      const text = await resp.text();
-      return { statusCode: 502, headers: cors(), body: 'Upstream submit failed: ' + resp.status + ' ' + text };
-    }
+    const resp = await fetch(siteUrl + '/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formBody.toString() });
+    if (!resp.ok) { const text = await resp.text(); return { statusCode: 502, headers: cors(), body: 'Upstream submit failed: ' + resp.status + ' ' + text }; }
     return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ ok: true }) };
   } catch (err) {
     return { statusCode: 500, headers: cors(), body: 'Error: ' + (err.message || 'Unknown') };
   }
 };
-
-function cors () {
-  return {
-    'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'POST, OPTIONS',
-    'access-control-allow-headers': 'authorization, content-type'
-  };
-}
+function cors () { return { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'authorization, content-type' }; }
 function corsJson () { return { ...cors(), 'content-type': 'application/json' }; }

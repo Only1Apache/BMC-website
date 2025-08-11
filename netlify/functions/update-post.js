@@ -21,10 +21,8 @@ exports.handler = async (event, context) => {
     const sub = await subResp.json();
 
     const isAdmin = (user.app_metadata?.roles || []).map(r=>String(r).toLowerCase()).includes('admin');
-const displayName = (user.user_metadata && (user.user_metadata.displayName || user.user_metadata.full_name)) || '';
     const ownerEmail = (sub.data && sub.data.owner_email) || sub.email || '';
-    const isOwner = !!( (user.email && ownerEmail && user.email.toLowerCase() === ownerEmail.toLowerCase())
-  || (displayName && sub.data && sub.data.author && String(displayName).trim() === String(sub.data.author).trim()) );
+    const isOwner = !!(user.email && ownerEmail && user.email.toLowerCase() === ownerEmail.toLowerCase());
     if (!isAdmin && !isOwner) return { statusCode: 403, headers: cors(), body: 'Forbidden' };
 
     const host = event.headers['x-forwarded-host'] || event.headers.host;

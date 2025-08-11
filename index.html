@@ -1,29 +1,617 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>BMC – Bettah Meta Community</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-<style>body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0b1020;color:#e5e7eb;margin:0} .container{max-width:900px;margin:0 auto;padding:24px} .muted{color:#94a3b8} .list{display:grid;gap:10px} .post-card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.2);border-radius:14px;padding:14px} .post-meta{font-size:12px;color:#9aa4b2;margin-bottom:6px}</style>
-</head><body>
-<div class="container">
-  <h1>BMC — Temp Members Feed Test</h1>
-  <p class="muted">This page is only for testing that functions + redirects work. You can delete after confirming.</p>
-  <div id="posts"></div>
-  <pre id="err" class="muted"></pre>
-  <p class="muted">Try opening <code>/.netlify/functions/get-posts</code> in a new tab too.</p>
-</div>
-<script>
-(async () => {
-  const postsDiv = document.getElementById('posts'), err = document.getElementById('err');
-  try{
-    const r = await fetch('/.netlify/functions/get-posts', { headers:{'cache-control':'no-cache'} });
-    if(!r.ok){ throw new Error('HTTP '+r.status); }
-    const j = await r.json();
-    if(!j.items || !j.items.length){ postsDiv.innerHTML = '<p class="muted">No posts yet (function returned empty list).</p>'; return; }
-    postsDiv.innerHTML = j.items.map(p => '<div class="post-card"><div class="post-meta">'+(p.author||'Member')+' • '+new Date(p.created_at).toLocaleString()+'</div><h4>'+ (p.title||'(untitled)') +'</h4><div class="muted">'+ (p.content||'') +'</div></div>').join('');
-  }catch(e){
-    err.textContent = 'Failed to load JSON from function: '+e.message;
-  }
-})();
-</script>
-</body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BMC – Bettah Meta Community</title>
+  <meta name="description" content="Official site for the Bettah Meta Community (BMC) — worlds, events, and virtual assets for Meta Horizon Worlds." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b1020; --panel:#0f172a; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --accent-2:#a78bfa; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35) }
+    *{box-sizing:border-box} html,body{margin:0} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+    a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    header{position:sticky;top:0;background:rgba(11,16,32,.75);backdrop-filter:saturate(180%) blur(6px);border-bottom:1px solid rgba(148,163,184,.15);z-index:50}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:var(--shadow)}
+    .brand h1{font-size:18px;margin:0}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .tab{padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,rgba(96,165,250,.45),rgba(167,139,250,.45));color:#0b1020;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    .tab.active{outline:2px solid white; box-shadow:0 0 0 2px rgba(255,255,255,.35) inset, 0 12px 26px rgba(96,165,250,.45)}
+    .tab.explore-cta{background: linear-gradient(90deg,#ff0066,#ff9900,#ffee00,#33dd66,#00ccff,#3366ff,#aa33ff,#ff0066);background-size:300% 100%;animation:shimmer 6s linear infinite;color:#0b1020;border-color:rgba(255,255,255,.5)}
+    @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+    .login-btn{margin-left:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer}
+    main{padding-top:24px}.panel{background:linear-gradient(180deg,rgba(15,23,42,.9),rgba(15,23,42,.75));border:1px solid rgba(148,163,184,.15);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+    .home-grid{display:grid;gap:18px}
+    @media(min-width:980px){
+      .home-grid{grid-template-columns:1.3fr .7fr;grid-template-rows:auto auto auto;grid-template-areas:"left rightTop" "left rightBottom" "left2 rightBottom";}
+      #home-left{grid-area:left} #home-right-top{grid-area:rightTop} #home-right-bottom{grid-area:rightBottom} #home-left-community{grid-area:left2}
+    }
+    .section-title{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:22px}
+    .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);color:#cfe3ff}
+    .card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.12);border-radius:14px;padding:16px}
+    .list{display:grid;gap:10px}.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;background:rgba(15,23,42,.6);border:1px solid rgba(148,163,184,.12)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(135deg,rgba(96,165,250,.45),rgba(167,139,250,.45));color:#0b1020;cursor:pointer;box-shadow:var(--shadow);font-weight:700}
+    .btn.danger{background:linear-gradient(135deg, rgba(255,96,96,.45), rgba(255,0,102,.45)); color:#fff}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px}
+    .muted{color:#94a3b8} footer{margin-top:36px;border-top:1px solid rgba(148,163,184,.15);padding:22px 0;color:#94a3b8}
+    .hidden{display:none} iframe{width:100%;border:0;height:420px;border-radius:12px} .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.25);font-size:12px;color:#cbd5e1}
+    .grid-2{display:grid;gap:14px} @media(min-width:820px){.grid-2{grid-template-columns:repeat(2,1fr)}} .grid-3{display:grid;gap:14px} @media(min-width:1080px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+    .spotlight{display:grid;grid-template-columns:160px 1fr;gap:14px;align-items:center}
+    .thumb, .world-thumb {transition: transform .4s ease, box-shadow .4s ease} .thumb:hover, .world-thumb:hover {transform: scale(1.05); box-shadow: 0 8px 24px rgba(96,165,250,.45)}
+    .thumb{width:100%;aspect-ratio:16/9;border-radius:12px;background:#0a1228 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1020}
+    #find-us{position:fixed;left:18px;bottom:18px;width:240px;padding:14px;background:linear-gradient(180deg,rgba(15,23,42,.95),rgba(15,23,42,.8));border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.45);z-index:60}
+    @media(max-width:860px){#find-us{position:static;width:auto;margin-top:12px}}
+    .members-only{display:none} body.authed .members-only{display:inherit}
+    .post-card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.2);border-radius:14px;padding:14px}
+    .post-meta{font-size:12px;color:#9aa4b2;margin-bottom:6px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .input, textarea{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb} textarea{min-height:120px;resize:vertical}
+    .hint{font-size:12px;color:#94a3b8;margin-top:6px}
+    .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.25);margin-left:8px;vertical-align:middle}
+    .role-admin{background:linear-gradient(135deg, rgba(255,0,102,.35), rgba(255,153,0,.35));color:#fff}
+    .role-member{background:linear-gradient(135deg, rgba(96,165,250,.35), rgba(167,139,250,.35));color:#fff}
+    .role-user{background:rgba(148,163,184,.2);color:#e5e7eb}
+    .scroll{max-height:260px;overflow:auto;display:grid;gap:10px;padding-right:6px}
+    .mini-card{background:rgba(2,6,23,.5);border:1px solid rgba(148,163,184,.18);border-radius:12px;padding:12px}
+    .mini-title{margin:2px 0 6px;font-size:15px}
+    .mini-meta{font-size:12px;color:#9aa4b2;margin-bottom:4px}
+    .post-actions{display:flex;gap:8px;margin-top:8px}
+    .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
+    .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
+    #modal-overlay{pointer-events:none} #modal-overlay[open]{pointer-events:auto}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><h1>BMC — Bettah Meta Community</h1></div>
+      <nav class="tabs" aria-label="Primary">
+        <button class="tab active" data-route="home">Home</button>
+        <button class="tab" data-route="assets">Virtual Assets</button>
+        <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
+        <button class="tab" data-route="members">Members</button>
+        <span class="profile-wrap" style="position:relative; display:inline-block">
+          <button id="profile-btn" class="login-btn" type="button" style="display:inline-block">Log in</button>
+          <span id="profile-badge" class="role-badge" style="display:none; position:absolute; top:-6px; right:-6px; pointer-events:none; transform:scale(.9)"></span>
+          <div id="profile-menu" class="panel" style="display:none; position:absolute; right:0; top:46px; width:200px; padding:10px; z-index:70">
+            <button id="menu-edit" class="btn" type="button" style="width:100%; margin-bottom:8px">Edit Profile</button>
+            <button id="menu-logout" class="btn danger" type="button" style="width:100%">Log out</button>
+          </div>
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="page-home" class="home-grid">
+      <div id="home-left" class="panel">
+        <h2 class="section-title">Latest in BMC <span class="badge">News</span></h2>
+        <div class="list" id="news-list">
+          <div class="list-item"><span>🎉 New world drop: <strong>BMC Outer Rim Arcade v2</strong> is live!</span><span class="pill">Aug 2025</span></div>
+          <div class="list-item"><span>🛠 Maintenance: <strong>Cosmos Plaza</strong> lighting pass this weekend.</span><span class="pill">Aug 2025</span></div>
+          <div class="list-item"><span>🏆 Event: <strong>Speed Build Jam</strong> – prizes + shoutouts.</span><span class="pill">Aug 2025</span></div>
+        </div>
+      </div>
+
+      <div id="home-left-community" class="panel">
+        <h3 class="section-title" style="font-size:18px">Community Posts</h3>
+        <div id="home-feed-scroll" class="scroll"></div>
+        <div class="toolbar" style="margin-top:10px">
+          <a class="btn" data-route="members" href="#members">View more</a>
+        </div>
+      </div>
+
+      <aside id="home-right-top" class="panel">
+        <h3 class="section-title">Jump In Now <span class="badge">Worlds Spotlight</span></h3>
+        <div id="spotlight" class="card spotlight">
+          <div class="thumb" id="spotlight-thumb"></div>
+          <div>
+            <h3 id="spotlight-title" style="margin-top:0">Outer Rim Arcade</h3>
+            <p id="spotlight-desc" class="muted" style="margin:0 0 10px">Arcade action, blimps, and weekly game drops.</p>
+            <div class="toolbar">
+              <a id="spotlight-open" class="btn" href="#" target="_blank" rel="noopener">Explore Worlds</a>
+              <button id="more-worlds" class="btn" data-route="worlds" type="button">More Worlds</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <aside id="home-right-bottom" class="panel">
+        <h3 class="section-title">Upcoming Events</h3>
+        <iframe id="calendar-frame" title="BMC Event Calendar" src="https://calendar.google.com/calendar/embed?src=krisja678%40gmail.com&ctz=America%2FDenver"></iframe>
+      </aside>
+    </section>
+
+    <aside id="find-us" class="panel">
+      <h3 class="section-title">Find Us</h3>
+      <div class="toolbar">
+        <a class="btn" id="discord-link" href="https://discord.gg/4ngj3MncXT" target="_blank" rel="noopener">Discord</a>
+        <a class="btn" id="instagram-link" href="https://www.instagram.com/only1apachevr/" target="_blank" rel="noopener">Instagram</a>
+        <a class="btn" id="youtube-link" href="https://www.youtube.com/@Only1ApacheVR" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </aside>
+
+    <section id="page-assets" class="hidden">
+      <div class="panel">
+        <h2 class="section-title">Virtual Assets <span class="badge">For Sale</span></h2>
+        <div class="grid-3" id="asset-grid">
+          <div class="card">
+            <h3 style="margin-top:0">Basketball Game</h3>
+            <p class="muted">Keeps track of players’ scores and plays VFX and SFX. Perfect for competitive fun in your world.</p>
+            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a></div>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Plinko</h3>
+            <p class="muted">Gambling-style minigame: costs points to play and tracks points over time.</p>
+            <div class="toolbar"><span class="pill">$20</span><a class="btn" href="https://horizon.meta.com/world/568309243035658" target="_blank" rel="noopener">View</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-worlds" class="hidden">
+      <div class="panel">
+        <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
+        <div class="grid-2" id="worlds-grid">
+          <div class="card">
+            <div class="world-thumb" id="world-thumb-ora" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
+            <h3 style="margin-top:0">Outer Rim Arcade</h3>
+            <p class="muted">All New Trimesh Layout • Mobile Dance Floor • New Optimized World.</p>
+            <div class="toolbar"><a class="btn" href="https://horizon.meta.com/world/520702641129652" target="_blank" rel="noopener">Explore World</a><a class="btn trailer-btn" data-embed="https://www.instagram.com/reel/DHCbjn0M2pf/embed" href="#" role="button">Trailer</a></div>
+          </div>
+          <div class="card">
+            <div class="world-thumb" id="world-thumb-hf" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
+            <h3 style="margin-top:0">High Fashion</h3>
+            <p class="muted">Realistic, unique clothing in the Bettah Meta Mall.</p>
+            <div class="toolbar"><a class="btn" href="https://horizon.meta.com/world/689215400945041" target="_blank" rel="noopener">Explore World</a><a class="btn trailer-btn" data-embed="https://www.instagram.com/reel/DL3gueWsmwL/embed" href="#" role="button">Trailer</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Members-only: Submit New World -->
+      <div id="world-entry-panel" class="panel members-only" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
+        <p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
+        <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
+        <form id="world-entry-form">
+          <div class="field">
+            <label for="weName">World name</label>
+            <input id="weName" class="input" type="text" placeholder="World title" required />
+          </div>
+          <div class="field">
+            <label for="weDesc">World description</label>
+            <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
+          </div>
+          <div class="field">
+            <label for="weImg">Image URL</label>
+            <input id="weImg" class="input" type="url" placeholder="https://..." required />
+            <div class="hint">Use a direct image link (PNG/JPG).</div>
+          </div>
+          <div class="field">
+            <label for="weUrl">World link</label>
+            <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="submit">Publish World</button>
+            <span id="we-status" class="muted" aria-live="polite"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
+        <div id="community-worlds" class="grid-2"></div>
+        <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
+      </div>
+    </section>
+
+    <section id="page-members" class="hidden">
+      <div class="panel">
+        <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
+        <p class="muted">Only Admins and Members can post.</p>
+
+        <form name="member-posts" class="members-only" id="post-form">
+          <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
+          <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
+          <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
+        </form>
+
+        <div style="margin-top:18px">
+          <h3 class="section-title" style="font-size:18px">Recent Posts</h3>
+          <div id="posts-list" class="list"></div>
+          <div id="posts-empty" class="muted">No posts yet.</div>
+          <div id="posts-error" class="muted" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hidden template so Netlify registers fields -->
+    <form name="member-posts" netlify hidden>
+      <input type="text" name="author" />
+      <input type="text" name="title" />
+      <textarea name="content"></textarea>
+      <input type="text" name="role" />
+      <input type="text" name="owner_email" />
+      <input type="text" name="category" />
+      <input type="text" name="world_id" />
+      <input type="text" name="world_name" />
+      <input type="text" name="world_desc" />
+      <input type="text" name="world_img" />
+      <input type="text" name="world_url" />
+    </form>
+
+    <footer class="container">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>© <span id="year"></span> Bettah Meta Community</span><span class="muted">Site by BMC • Deployed on Netlify</span></div>
+    </footer>
+  </main>
+
+  <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:80">
+    <div class="modal" style="width:min(880px,92vw);background:#0f172a;border:1px solid rgba(148,163,184,.25);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.6)">
+      <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(148,163,184,.2)">
+        <h4 class="modal-title" id="modal-title" style="margin:0">World Trailer</h4>
+        <button id="modal-close" type="button" style="background:transparent;border:0;color:#e5e7eb;font-size:18px;cursor:pointer">Close ✕</button>
+      </div>
+      <div class="modal-body" id="modal-body" style="padding:0"></div>
+    </div>
+  </div>
+
+  <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const WORLDS = [
+      { id:'ora', title:'Outer Rim Arcade', short:'Arcade action, blimps, and weekly game drops.', url:'https://horizon.meta.com/world/520702641129652', img:'https://image2url.com/images/1754644316996-4079296d-1e0c-4a52-81d7-280b7f7896cc.png', trailer:'https://www.instagram.com/reel/DHCbjn0M2pf/embed' },
+      { id:'hf', title:'High Fashion', short:'Realistic, unique clothing in the Bettah Meta Mall.', url:'https://horizon.meta.com/world/689215400945041', img:'https://image2url.com/images/1754645693946-71102c27-1b22-480c-8a8f-69973ccef274.jpg', trailer:'https://www.instagram.com/reel/DL3gueWsmwL/embed' }
+    ];
+
+    const routes=['home','assets','worlds','members'];
+    const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
+    function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
+    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); });
+    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
+
+    const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
+    const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
+    let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
+    show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
+
+    // Identity helpers
+    const ALLOWED_ROLES = ['admin', 'member'];
+    function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
+    function hasAllowedRole(user){ return rolesOf(user).some(r=>ALLOWED_ROLES.includes(r)); }
+    function getPreferredDisplayName(user){
+      const meta = (user && (user.user_metadata || {})) || {};
+      return (meta.displayName || meta.full_name || localStorage.getItem('bmc_display_name') || '').trim();
+    }
+
+    // Profile dropdown + badge
+    const profileBtn=document.getElementById('profile-btn');
+    const menu = document.getElementById('profile-menu');
+    function toggleProfileMenu(){ if(!menu) return; menu.style.display = (menu.style.display==='block') ? 'none' : 'block'; }
+    if (profileBtn) {
+      profileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const authed = profileBtn.dataset.authed === '1';
+        if (!authed) { if (window.netlifyIdentity) window.netlifyIdentity.open('login'); return; }
+        toggleProfileMenu();
+      });
+    }
+    document.getElementById('menu-edit')?.addEventListener('click', (e)=>{ e.stopPropagation(); menu.style.display='none'; openProfileModal(); });
+    document.getElementById('menu-logout')?.addEventListener('click', async (e)=>{ e.stopPropagation(); menu.style.display='none'; if(window.netlifyIdentity) await window.netlifyIdentity.logout(); });
+    document.addEventListener('click', (e)=>{ const wrap=document.querySelector('.profile-wrap'); if(wrap && !wrap.contains(e.target)) menu.style.display='none'; });
+
+    function updateAuthUI(user){
+      const postForm=document.getElementById('post-form');
+      const chip=document.getElementById('profile-badge');
+      if(user){
+        document.body.classList.add('authed');
+        const roles=rolesOf(user);
+        const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
+        const worldPanel = document.getElementById('world-entry-panel');
+        const weForm = document.getElementById('world-entry-form');
+        const weBanner = document.getElementById('we-banner');
+        const isMem = roles.includes('member');
+        const isAdm = roles.includes('admin');
+        if (worldPanel) worldPanel.style.display = (isMem || isAdm) ? '' : 'none';
+        if (weForm && weBanner){
+          const btn = weForm.querySelector('button[type="submit"]');
+          if (isMem){ btn && (btn.disabled = false); weBanner.style.display='none'; }
+          else if (isAdm){ btn && (btn.disabled = true); weBanner.textContent='Admins can view this form, but only Members can publish world entries.'; weBanner.style.display='block'; }
+          else { btn && (btn.disabled = true); weBanner.textContent='Log in as a Member to publish a world.'; weBanner.style.display='block'; }
+        }
+        if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
+        if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
+        if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
+      } else {
+        document.body.classList.remove('authed');
+        if (postForm) postForm.style.display='none';
+        const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
+        if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Log in'; profileBtn.dataset.authed='0'; }
+        if (menu) menu.style.display='none';
+      }
+    }
+    if(window.netlifyIdentity){
+      window.netlifyIdentity.on('init', (u)=>{ updateAuthUI(u); });
+      window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); window.netlifyIdentity.close(); });
+      window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); });
+      window.netlifyIdentity.init();
+    }
+
+    // Modal
+    const modal=document.getElementById('modal-overlay');
+    const modalBody=document.getElementById('modal-body');
+    const modalTitle=document.getElementById('modal-title');
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+    function openTrailer(src){ modalTitle.textContent='World Trailer'; modalBody.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media" allowfullscreen title="Instagram Reel" style="width:100%;aspect-ratio:16/9;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:14px"></iframe>`; modal.style.display='grid'; modal.setAttribute('open',''); }
+    function openProfileModal(){
+      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user){ alert('Please log in.'); return; }
+      const current = getPreferredDisplayName(user);
+      modalTitle.textContent = 'Profile';
+      modalBody.innerHTML = `
+        <div style="padding:16px">
+          <div class="field">
+            <label for="profile-display-name">Display name</label>
+            <input id="profile-display-name" class="input" type="text" placeholder="How should your name appear?" value="${(current||'').replace(/"/g,'&quot;')}" />
+            <div class="hint">Saved to your account. New posts will use this by default.</div>
+          </div>
+          <div class="toolbar">
+            <button id="profile-save" class="btn" type="button">Save</button>
+            <button id="profile-cancel" class="btn" type="button">Cancel</button>
+            <span id="profile-status" class="muted" aria-live="polite"></span>
+          </div>
+        </div>`;
+      modal.style.display='grid'; modal.setAttribute('open','');
+      document.getElementById('profile-cancel').onclick = closeModal;
+      document.getElementById('profile-save').onclick   = saveProfileDisplayName;
+    }
+    async function saveProfileDisplayName(){
+      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user){ alert('Please log in.'); return; }
+      const input = document.getElementById('profile-display-name');
+      const status = document.getElementById('profile-status');
+      const name = (input.value || '').trim();
+      if(!name){ status.textContent='Please enter a display name.'; return; }
+      try{
+        status.textContent='Saving…';
+        await user.update({ data: { displayName: name } });
+        localStorage.setItem('bmc_display_name', name);
+        status.textContent='Saved!';
+        setTimeout(()=>{ closeModal(); }, 500);
+      }catch(err){
+        status.textContent='Failed to save. ' + (err.message || '');
+      }
+    }
+    function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); }
+    document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
+
+    // Posts: submit secure, delete, update
+    const postForm=document.getElementById('post-form'), postStatus=document.getElementById('post-status');
+    async function submitSecurePost(title, content, displayName, extra = {}){
+      const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user) throw new Error('You must be logged in.');
+      const token = await user.jwt(true);
+      const resp = await fetch('/.netlify/functions/submit-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ title, content, displayName, ...extra }) });
+      if(!resp.ok){ const t=await resp.text(); throw new Error('Submit failed: '+resp.status+' '+t); }
+      return await resp.json();
+    }
+    async function deletePost(id){
+      const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user) throw new Error('Login required');
+      const token = await user.jwt(true);
+      const resp = await fetch('/.netlify/functions/delete-post?id='+encodeURIComponent(id), { method:'DELETE', headers:{ 'Authorization':'Bearer '+token } });
+      if(!resp.ok){ const t=await resp.text(); throw new Error('Delete failed: '+resp.status+' '+t); }
+      return await resp.json();
+    }
+    async function updatePost(id, title, content){
+      const user=window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      if(!user) throw new Error('Login required');
+      const token = await user.jwt(true);
+      const resp = await fetch('/.netlify/functions/update-post', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, body: JSON.stringify({ id, title, content }) });
+      if(!resp.ok){ const t=await resp.text(); throw new Error('Update failed: '+resp.status+' '+t); }
+      return await resp.json();
+    }
+
+    if(postForm){ postForm.addEventListener('submit', async (e)=>{ e.preventDefault(); if(postStatus) postStatus.textContent='Posting…'; const title=document.getElementById('title')?.value||''; const content=document.getElementById('content')?.value||''; const u=window.netlifyIdentity && window.netlifyIdentity.currentUser(); const profileName = getPreferredDisplayName(u); if(!profileName){ if(postStatus) postStatus.textContent='Set your display name in Profile first.'; openProfileModal(); return; } try{ await submitSecurePost(title, content, profileName); if(postStatus) postStatus.textContent='Thanks! Your post was submitted.'; postForm.reset(); setTimeout(()=>{ loadPosts(); loadHomeFeed(); }, 800);}catch(err){ if(postStatus) postStatus.textContent=err.message||'Could not submit.'; } }); }
+
+    async function loadPosts(){
+      const list=document.getElementById('posts-list'), empty=document.getElementById('posts-empty'), errBox=document.getElementById('posts-error');
+      try{
+        const headers = { 'cache-control':'no-cache' };
+        try { const u = window.netlifyIdentity && window.netlifyIdentity.currentUser(); if (u) headers['Authorization'] = 'Bearer ' + (await u.jwt(true)); } catch(_){}
+        const resp = await fetch('/.netlify/functions/get-posts', { headers });
+        if(!resp.ok){ const t = await resp.text(); throw new Error('Function returned '+resp.status+' '+t); }
+        const data=await resp.json();
+        list.innerHTML='';
+        if(!data || !Array.isArray(data.items) || data.items.length===0){ empty.style.display='block'; errBox.style.display='none'; return; }
+        empty.style.display='none'; errBox.style.display='none';
+        data.items.forEach(p=>{
+          const div=document.createElement('div'); div.className='post-card';
+          const meta=document.createElement('div'); meta.className='post-meta';
+          meta.textContent=`${p.author||'Member'} • ${new Date(p.created_at).toLocaleString()} `;
+          const role = (p.role ? String(p.role) : 'member').toLowerCase();
+          const badge=document.createElement('span'); badge.className=`role-badge role-${role}`; badge.textContent=role.charAt(0).toUpperCase()+role.slice(1);
+          meta.appendChild(badge);
+          const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)';
+          const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||'';
+          div.appendChild(meta); div.appendChild(title); div.appendChild(body);
+
+          if (p.can_manage){
+            const actions=document.createElement('div'); actions.className='post-actions';
+            const editBtn=document.createElement('button'); editBtn.className='sm-btn'; editBtn.textContent='Edit';
+            const delBtn=document.createElement('button'); delBtn.className='sm-btn danger'; delBtn.textContent='Delete';
+            editBtn.addEventListener('click', ()=> openEditModal(p));
+            delBtn.addEventListener('click', async ()=>{ if(!confirm('Delete this post?')) return; try{ await deletePost(p.id); await loadPosts(); await loadHomeFeed(); }catch(e){ alert(e.message); } });
+            actions.appendChild(editBtn); actions.appendChild(delBtn);
+            div.appendChild(actions);
+          }
+          list.appendChild(div);
+        });
+      }catch(e){ if(errBox){ errBox.textContent='Could not load posts. ('+e.message+')'; errBox.style.display='block'; } }
+    }
+
+    async function loadHomeFeed(){
+      const wrap = document.getElementById('home-feed-scroll');
+      if(!wrap) return;
+      try{
+        const headers = { 'cache-control':'no-cache' }; try { const u = window.netlifyIdentity && window.netlifyIdentity.currentUser(); if (u) headers['Authorization'] = 'Bearer ' + (await u.jwt(true)); } catch(_){}
+        const resp = await fetch('/.netlify/functions/get-posts', { headers });
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const data = await resp.json();
+        const items = (data.items || []).slice(0,5);
+        if(items.length === 0){ wrap.innerHTML = '<div class="muted">No posts yet.</div>'; return; }
+        wrap.innerHTML = '';
+        items.forEach(p => {
+          const card = document.createElement('div'); card.className = 'mini-card';
+          const role = (p.role ? String(p.role) : 'member').toLowerCase();
+          const badge = `<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
+          const meta = `<div class="mini-meta">${p.author || 'Member'} • ${new Date(p.created_at).toLocaleString()} ${badge}</div>`;
+          const title = `<div class="mini-title">${p.title || '(untitled)'}</div>`;
+          const text = (p.content || '').replace(/\s+/g,' ').trim();
+          const body = `<div class="muted">${text.length > 160 ? text.slice(0,160) + '…' : text}</div>`;
+          card.innerHTML = meta + title + body;
+          wrap.appendChild(card);
+        });
+      }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts. '+(e.message||'')+'</div>'; }
+    }
+
+    // --- Community World Entries ---
+    (function wireWorldEntry(){
+      const form = document.getElementById('world-entry-form');
+      const status = document.getElementById('we-status');
+      if(!form) return;
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const name = getPreferredDisplayName(u);
+        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+        const world_name = document.getElementById('weName').value.trim();
+        const world_desc = document.getElementById('weDesc').value.trim();
+        const world_img  = document.getElementById('weImg').value.trim();
+        const world_url  = document.getElementById('weUrl').value.trim();
+        if(!world_name || !world_desc || !world_img || !world_url){ status.textContent='Please complete all fields.'; return; }
+        if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ status.textContent='URLs must start with http(s)://'; return; }
+        try{
+          status.textContent='Publishing…';
+          await submitSecurePost(world_name, world_desc, name, {
+            category: 'world_entry',
+            world_name, world_desc, world_img, world_url
+          });
+          status.textContent='Published!';
+          form.reset();
+          await loadCommunityWorlds();
+        }catch(err){
+          console.error(err);
+          status.textContent=err.message || 'Could not publish.';
+        }
+      });
+    })();
+
+    async function loadCommunityWorlds(){
+      const grid = document.getElementById('community-worlds');
+      const empty = document.getElementById('community-worlds-empty');
+      if(!grid || !empty) return;
+      try{
+        const headers = { 'cache-control':'no-cache' };
+        try { const u = window.netlifyIdentity && window.netlifyIdentity.currentUser(); if (u) headers['Authorization'] = 'Bearer ' + (await u.jwt(true)); } catch(_){}
+        const resp = await fetch('/.netlify/functions/get-posts', { headers });
+        if(!resp.ok) throw new Error('HTTP '+resp.status);
+        const data = await resp.json();
+        const items = (data.items || []).filter(p => (p.category||'')==='world_entry');
+        grid.innerHTML='';
+        if(items.length===0){ empty.style.display='block'; return; }
+        empty.style.display='none';
+        items.forEach(p=>{
+          const name = p.world_name || p.title || 'Untitled';
+          const desc = p.world_desc || p.content || '';
+          const img  = p.world_img  || '';
+          const url  = p.world_url  || '#';
+          const card = document.createElement('div'); card.className='card';
+          const thumb = document.createElement('div'); thumb.className='world-thumb';
+          thumb.style.cssText='width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px';
+          if(img) thumb.style.backgroundImage = `url('${img}')`;
+          const h3 = document.createElement('h3'); h3.style.marginTop='0'; h3.textContent = name;
+          const pdesc = document.createElement('p'); pdesc.className='muted'; pdesc.textContent = desc;
+          const toolbar = document.createElement('div'); toolbar.className='toolbar';
+          const a = document.createElement('a'); a.className='btn'; a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='Explore World';
+          toolbar.appendChild(a);
+          const role = (p.role ? String(p.role) : 'member').toLowerCase();
+          const badge = document.createElement('span'); badge.className = 'role-badge role-'+role; badge.textContent = role.charAt(0).toUpperCase()+role.slice(1);
+          toolbar.appendChild(badge);
+          if (p.can_manage){
+            const del=document.createElement('button'); del.className='sm-btn danger'; del.textContent='Delete';
+            del.addEventListener('click', async ()=>{
+              if(!confirm('Delete this world entry?')) return;
+              try{ await deletePost(p.id); await loadCommunityWorlds(); }catch(e){ alert(e.message); }
+            });
+            toolbar.appendChild(del);
+          }
+          card.appendChild(thumb); card.appendChild(h3); card.appendChild(pdesc); card.appendChild(toolbar);
+          grid.appendChild(card);
+        });
+      }catch(e){
+        console.error('loadCommunityWorlds error', e);
+        empty.style.display='block';
+      }
+    }
+    loadCommunityWorlds();
+    document.addEventListener('click', (e)=>{
+      const el = e.target.closest('[data-route]');
+      if (el && el.getAttribute('data-route')==='worlds'){
+        setTimeout(loadCommunityWorlds, 250);
+      }
+    });
+
+    function openEditModal(p){
+      const modal = document.getElementById('modal-overlay');
+      const body = document.getElementById('modal-body');
+      const titleEl = document.getElementById('modal-title');
+      titleEl.textContent = 'Edit Post';
+      body.innerHTML = `
+        <div style="padding:16px">
+          <div class="field">
+            <label>Title</label>
+            <input id="edit-title" class="input" type="text" value="${(p.title||'').replace(/"/g,'&quot;')}" />
+          </div>
+          <div class="field">
+            <label>Post</label>
+            <textarea id="edit-content" class="input">${(p.content||'')}</textarea>
+          </div>
+          <div class="toolbar">
+            <button id="edit-save" class="btn" type="button">Save</button>
+            <button id="edit-cancel" class="btn" type="button">Cancel</button>
+            <span id="edit-status" class="muted" aria-live="polite"></span>
+          </div>
+        </div>`;
+      modal.style.display = 'grid';
+      modal.setAttribute('open','');
+      document.getElementById('edit-cancel').onclick = () => { body.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); };
+      document.getElementById('edit-save').onclick = async () => {
+        const s = document.getElementById('edit-status');
+        const t = document.getElementById('edit-title').value.trim();
+        const c = document.getElementById('edit-content').value.trim();
+        if(!t || !c){ s.textContent='Fill everything.'; return; }
+        try{
+          s.textContent='Saving…';
+          await updatePost(p.id, t, c);
+          s.textContent='Saved!';
+          setTimeout(()=>{ document.getElementById('edit-cancel').click(); loadPosts(); loadHomeFeed(); }, 300);
+        }catch(e){ s.textContent = e.message || 'Update failed'; }
+      };
+    }
+
+    // initial loads
+    loadPosts();
+    loadHomeFeed();
+
+    // year
+    const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
+  });
+  </script>
+</body>
+</html>
