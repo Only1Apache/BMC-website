@@ -1,4 +1,4 @@
-// /.netlify/functions/get-posts — hides emails; returns can_manage; includes category/world fields
+// /.netlify/functions/get-posts — hides emails; returns can_manage; includes category/world_id
 const apiBase = "https://api.netlify.com/api/v1";
 
 exports.handler = async (event, context) => {
@@ -10,14 +10,16 @@ exports.handler = async (event, context) => {
   const headers = { Authorization: `Bearer ${token}` };
 
   const currentUser = context.clientContext && context.clientContext.user;
-  const currentEmail = currentUser?.email || "";
-  const isAdmin = ((currentUser?.app_metadata?.roles) || []).map(r=>String(r).toLowerCase()).includes("admin");
+  const currentEmail = currentUser?.email || '';
+  const isAdmin = ((currentUser?.app_metadata?.roles) || []).map(r=>String(r).toLowerCase()).includes('admin');
 
   try {
     const formsResp = await fetch(`${apiBase}/sites/${siteId}/forms`, { headers });
     if (!formsResp.ok) throw new Error("Failed to list forms");
     const forms = await formsResp.json();
-    if (!forms.length) return { statusCode: 200, headers: json(), body: JSON.stringify({ items: [] }) };
+    if (!forms.length) {
+      return { statusCode: 200, headers: json(), body: JSON.stringify({ items: [] }) };
+    }
 
     const preferred = forms.find(f => f.name === "member-posts") || forms.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))[0];
     const subsResp = await fetch(`${apiBase}/forms/${preferred.id}/submissions`, { headers });
@@ -25,7 +27,7 @@ exports.handler = async (event, context) => {
     const subs = await subsResp.json();
 
     const items = subs.map(s => {
-      const ownerEmail = (s.data && s.data.owner_email) || "";
+      const ownerEmail = (s.data && s.data.owner_email) || '';
       const canManage = isAdmin || (!!currentEmail && ownerEmail && currentEmail.toLowerCase() === ownerEmail.toLowerCase());
       return {
         id: s.id,

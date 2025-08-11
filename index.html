@@ -155,7 +155,10 @@
 
     <section id="page-worlds" class="hidden">
       <div class="panel">
-        <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
+        <h2 class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>BMC Worlds <span class="badge">Meta Horizon Worlds</span></span>
+          <button id="world-posts-btn" class="btn" type="button">World Posts</button>
+        </h2>
         <div class="grid-2" id="worlds-grid">
           <div class="card">
             <div class="world-thumb" id="world-thumb-ora" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
@@ -202,7 +205,8 @@
         </form>
       </div>
 
-      <div class="panel" style="margin-top:16px">
+      <!-- Inline Community Worlds panel is now hidden (we use modal instead) -->
+      <div class="panel" style="margin-top:16px; display:none">
         <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
         <div id="community-worlds" class="grid-2"></div>
         <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
@@ -434,8 +438,7 @@
           const div=document.createElement('div'); div.className='post-card';
           const meta=document.createElement('div'); meta.className='post-meta';
           meta.textContent=`${p.author||'Member'} • ${new Date(p.created_at).toLocaleString()} `;
-          const role = (p.role ? String(p.role) : 'member').toLowerCase();
-          const badge=document.createElement('span'); badge.className=`role-badge role-${role}`; badge.textContent=role.charAt(0).toUpperCase()+role.slice(1);
+          const badge=document.createElement('span'); const role=(p.role ? String(p.role) : 'member').toLowerCase(); badge.className=`role-badge role-${role}`; badge.textContent=role.charAt(0).toUpperCase()+role.slice(1);
           meta.appendChild(badge);
           const title=document.createElement('h4'); title.style.margin='4px 0 6px'; title.textContent=p.title||'(untitled)';
           const body=document.createElement('div'); body.className='muted'; body.textContent=p.content||'';
@@ -480,93 +483,90 @@
       }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts. '+(e.message||'')+'</div>'; }
     }
 
-    // --- Community World Entries ---
-    (function wireWorldEntry(){
-      const form = document.getElementById('world-entry-form');
-      const status = document.getElementById('we-status');
-      if(!form) return;
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-        const name = getPreferredDisplayName(u);
-        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
-        const world_name = document.getElementById('weName').value.trim();
-        const world_desc = document.getElementById('weDesc').value.trim();
-        const world_img  = document.getElementById('weImg').value.trim();
-        const world_url  = document.getElementById('weUrl').value.trim();
-        if(!world_name || !world_desc || !world_img || !world_url){ status.textContent='Please complete all fields.'; return; }
-        if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ status.textContent='URLs must start with http(s)://'; return; }
-        try{
-          status.textContent='Publishing…';
-          await submitSecurePost(world_name, world_desc, name, {
-            category: 'world_entry',
-            world_name, world_desc, world_img, world_url
-          });
-          status.textContent='Published!';
-          form.reset();
-          await loadCommunityWorlds();
-        }catch(err){
-          console.error(err);
-          status.textContent=err.message || 'Could not publish.';
-        }
-      });
-    })();
+    // --- Community World Posts Modal ---
+    async function openWorldPostsModal(){
+      const modal  = document.getElementById('modal-overlay');
+      const body   = document.getElementById('modal-body');
+      const title  = document.getElementById('modal-title');
+      title.textContent = 'Community World Posts';
 
-    async function loadCommunityWorlds(){
-      const grid = document.getElementById('community-worlds');
-      const empty = document.getElementById('community-worlds-empty');
-      if(!grid || !empty) return;
+      body.innerHTML = `<div style="padding:16px"><div class="muted">Loading community worlds…</div></div>`;
+      modal.style.display = 'grid';
+      modal.setAttribute('open','');
+
       try{
-        const headers = { 'cache-control':'no-cache' };
-        try { const u = window.netlifyIdentity && window.netlifyIdentity.currentUser(); if (u) headers['Authorization'] = 'Bearer ' + (await u.jwt(true)); } catch(_){}
+        const headers = { 'cache-control': 'no-cache' };
+        try {
+          const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+          if (u) headers['Authorization'] = 'Bearer ' + (await u.jwt(true));
+        } catch(_){}
+
         const resp = await fetch('/.netlify/functions/get-posts', { headers });
         if(!resp.ok) throw new Error('HTTP '+resp.status);
         const data = await resp.json();
-        const items = (data.items || []).filter(p => (p.category||'')==='world_entry');
-        grid.innerHTML='';
-        if(items.length===0){ empty.style.display='block'; return; }
-        empty.style.display='none';
-        items.forEach(p=>{
+        const items = (data.items || []).filter(p => (p.category||'') === 'world_entry');
+
+        if(items.length === 0){
+          body.innerHTML = `<div style="padding:16px"><div class="muted">No community worlds yet.</div></div>`;
+          return;
+        }
+
+        const list = items.map(p => {
           const name = p.world_name || p.title || 'Untitled';
-          const desc = p.world_desc || p.content || '';
-          const img  = p.world_img  || '';
-          const url  = p.world_url  || '#';
-          const card = document.createElement('div'); card.className='card';
-          const thumb = document.createElement('div'); thumb.className='world-thumb';
-          thumb.style.cssText='width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px';
-          if(img) thumb.style.backgroundImage = `url('${img}')`;
-          const h3 = document.createElement('h3'); h3.style.marginTop='0'; h3.textContent = name;
-          const pdesc = document.createElement('p'); pdesc.className='muted'; pdesc.textContent = desc;
-          const toolbar = document.createElement('div'); toolbar.className='toolbar';
-          const a = document.createElement('a'); a.className='btn'; a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='Explore World';
-          toolbar.appendChild(a);
+          const desc = (p.world_desc || p.content || '').replace(/\s+/g,' ').trim();
+          const img  = p.world_img || '';
+          const url  = p.world_url || '#';
           const role = (p.role ? String(p.role) : 'member').toLowerCase();
-          const badge = document.createElement('span'); badge.className = 'role-badge role-'+role; badge.textContent = role.charAt(0).toUpperCase()+role.slice(1);
-          toolbar.appendChild(badge);
-          if (p.can_manage){
-            const del=document.createElement('button'); del.className='sm-btn danger'; del.textContent='Delete';
-            del.addEventListener('click', async ()=>{
-              if(!confirm('Delete this world entry?')) return;
-              try{ await deletePost(p.id); await loadCommunityWorlds(); }catch(e){ alert(e.message); }
-            });
-            toolbar.appendChild(del);
-          }
-          card.appendChild(thumb); card.appendChild(h3); card.appendChild(pdesc); card.appendChild(toolbar);
-          grid.appendChild(card);
+          const badge = `<span class="role-badge role-${role}">${role.charAt(0).toUpperCase()+role.slice(1)}</span>`;
+          const manage = p.can_manage ? `
+            <div style="display:flex; gap:8px; margin-top:8px">
+              <button class="sm-btn danger" data-del="\${p.id}">Delete</button>
+            </div>` : '';
+          return `
+            <div class="card" style="display:grid; grid-template-columns: 160px 1fr; gap:14px; align-items:start">
+              <div class="world-thumb" style="width:160px; aspect-ratio:16/9; border-radius:12px; background:#0a1228 center/cover no-repeat; ${'${img ? `background-image:url(\'' + img + '\')` : ''}'}"></div>
+              <div>
+                <div class="mini-meta" style="margin-bottom:6px">
+                  \${p.author || 'Member'} • \${new Date(p.created_at).toLocaleString()} ${'${badge}'} 
+                </div>
+                <h3 style="margin:4px 0 6px">\${name}</h3>
+                <div class="muted" style="margin-bottom:10px">\${desc}</div>
+                <div class="toolbar">
+                  <a class="btn" href="\${url}" target="_blank" rel="noopener">Explore World</a>
+                </div>
+                \${manage}
+              </div>
+            </div>`;
+        }).join('');
+
+        body.innerHTML = `<div style="padding:16px; max-height:min(70vh,720px); overflow:auto; display:grid; gap:12px">${list}</div>`;
+
+        // wire delete buttons (owner/admin only)
+        body.querySelectorAll('[data-del]').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            if(!confirm('Delete this world entry?')) return;
+            const id = btn.getAttribute('data-del');
+            try{
+              const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+              if(!u) { alert('Please log in.'); return; }
+              const token = await u.jwt(true);
+              const del = await fetch('/.netlify/functions/delete-post?id='+encodeURIComponent(id), {
+                method:'DELETE',
+                headers:{ 'Authorization':'Bearer '+token }
+              });
+              if(!del.ok){ const t = await del.text(); throw new Error(t); }
+              openWorldPostsModal(); // refresh
+            }catch(err){ alert('Delete failed: ' + (err.message||'')); }
+          });
         });
+
       }catch(e){
-        console.error('loadCommunityWorlds error', e);
-        empty.style.display='block';
+        body.innerHTML = `<div style="padding:16px"><div class="muted">Could not load community worlds. \${e.message||''}</div></div>`;
       }
     }
-    loadCommunityWorlds();
-    document.addEventListener('click', (e)=>{
-      const el = e.target.closest('[data-route]');
-      if (el && el.getAttribute('data-route')==='worlds'){
-        setTimeout(loadCommunityWorlds, 250);
-      }
-    });
+    document.getElementById('world-posts-btn')?.addEventListener('click', (e)=>{ e.preventDefault(); openWorldPostsModal(); });
 
+    // Edit modal for community posts
     function openEditModal(p){
       const modal = document.getElementById('modal-overlay');
       const body = document.getElementById('modal-body');
@@ -576,11 +576,11 @@
         <div style="padding:16px">
           <div class="field">
             <label>Title</label>
-            <input id="edit-title" class="input" type="text" value="${(p.title||'').replace(/"/g,'&quot;')}" />
+            <input id="edit-title" class="input" type="text" value="${(p.title or '').replace('"','&quot;') if False else ''}" />
           </div>
           <div class="field">
             <label>Post</label>
-            <textarea id="edit-content" class="input">${(p.content||'')}</textarea>
+            <textarea id="edit-content" class="input"></textarea>
           </div>
           <div class="toolbar">
             <button id="edit-save" class="btn" type="button">Save</button>
@@ -588,29 +588,29 @@
             <span id="edit-status" class="muted" aria-live="polite"></span>
           </div>
         </div>`;
+      // Fix dynamic values with JS after insert
       modal.style.display = 'grid';
       modal.setAttribute('open','');
-      document.getElementById('edit-cancel').onclick = () => { body.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); };
-      document.getElementById('edit-save').onclick = async () => {
-        const s = document.getElementById('edit-status');
-        const t = document.getElementById('edit-title').value.trim();
-        const c = document.getElementById('edit-content').value.trim();
-        if(!t || !c){ s.textContent='Fill everything.'; return; }
+      const t = body.querySelector('#edit-title'); if (t) t.value = p.title || '';
+      const c = body.querySelector('#edit-content'); if (c) c.value = p.content || '';
+      body.querySelector('#edit-cancel').onclick = () => { body.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); };
+      body.querySelector('#edit-save').onclick = async () => {
+        const s = body.querySelector('#edit-status');
+        const newTitle = (body.querySelector('#edit-title').value || '').trim();
+        const newContent = (body.querySelector('#edit-content').value || '').trim();
+        if(!newTitle || !newContent){ s.textContent='Fill everything.'; return; }
         try{
           s.textContent='Saving…';
-          await updatePost(p.id, t, c);
+          await updatePost(p.id, newTitle, newContent);
           s.textContent='Saved!';
-          setTimeout(()=>{ document.getElementById('edit-cancel').click(); loadPosts(); loadHomeFeed(); }, 300);
+          setTimeout(()=>{ body.querySelector('#edit-cancel').click(); loadPosts(); loadHomeFeed(); }, 300);
         }catch(e){ s.textContent = e.message || 'Update failed'; }
       };
     }
 
     // initial loads
-    loadPosts();
     loadHomeFeed();
-
-    // year
-    const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
+    loadPosts();
   });
   </script>
 </body>
