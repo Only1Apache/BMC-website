@@ -277,8 +277,8 @@
     const routes=['home','assets','worlds','members'];
     const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
     function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
-    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); if (route === 'home') { try { loadHomeFeed(); } catch(e){} } });
-window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
+    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); });
+    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
 
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
@@ -617,11 +617,7 @@ function isMember(user){ return rolesOf(user).includes('member'); }
       };
     }
     
-    // Ensure home feed loads immediately and on window load
-try { loadHomeFeed(); } catch(e){}
-window.addEventListener('load', () => { try { loadHomeFeed(); } catch(e){} });
-
-// year
+    // year
     const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
   });
   </script>
