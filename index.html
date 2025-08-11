@@ -277,14 +277,25 @@
     const routes=['home','assets','worlds','members'];
     const sections={home:document.getElementById('page-home'),assets:document.getElementById('page-assets'),worlds:document.getElementById('page-worlds'),members:document.getElementById('page-members')};
     function setRoute(route){ if(!routes.includes(route)) route='home'; for(const r of routes){ sections[r].classList.toggle('hidden', r!==route);} document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.route===route)); if (location.hash.replace('#','')!==route) location.hash=route; }
-    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); });
-    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); setRoute(location.hash.replace('#','')||'home');
+    document.addEventListener('click', (e) => { const el = e.target.closest('[data-route]'); if (!el) return; const route = el.getAttribute('data-route'); if (!route) return; e.preventDefault(); setRoute(route); routeDidChange(route); });
+    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#',''))); const __start = (location.hash || '').replace('#','') || 'home';
+setRoute(__start);
+routeDidChange(__start);
 
     const worldThumbs={ora:document.getElementById('world-thumb-ora'), hf:document.getElementById('world-thumb-hf')}; WORLDS.forEach(w=>{ const el=worldThumbs[w.id]; if(el) el.style.backgroundImage=`url('${w.img}')`; });
     const titleEl=document.getElementById('spotlight-title'), descEl=document.getElementById('spotlight-desc'), openEl=document.getElementById('spotlight-open'), thumbEl=document.getElementById('spotlight-thumb');
     let idx=0; function show(n){ const w=WORLDS[n%WORLDS.length]; if(!w) return; titleEl.textContent=w.title; descEl.textContent=w.short; openEl.href=w.url; openEl.target="_blank"; openEl.rel="noopener"; thumbEl.style.backgroundImage=`url('${w.img}')`; }
     show(0); setInterval(()=>{ idx=(idx+1)%WORLDS.length; show(idx); },5000);
 
+    
+    // Route side-effects: load data for visible page
+    function routeDidChange(r){
+      try{
+        if (r === 'home') { try { loadHomeFeed(); } catch(e){} }
+        if (r === 'members') { try { loadPosts(); } catch(e){} }
+        if (r === 'worlds') { try { loadCommunityWorlds && loadCommunityWorlds(); } catch(e){} }
+      }catch(_){}
+    }
     // Identity helpers
     const ALLOWED_ROLES = ['admin', 'member'];
     function rolesOf(user){ return (user?.app_metadata?.roles||user?.user_metadata?.roles||[]).map(r=>String(r).toLowerCase()); }
