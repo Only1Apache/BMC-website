@@ -73,7 +73,7 @@
         <button class="tab active" data-route="home">Home</button>
         <button class="tab" data-route="assets">Virtual Assets</button>
         <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
-        <button class="tab" data-route="members">Community</button>
+        <button class="tab" data-route="members">Members</button>
         <span class="profile-wrap" style="position:relative; display:inline-block">
           <button id="profile-btn" class="login-btn" type="button" style="display:inline-block">Log in</button>
           <span id="profile-badge" class="role-badge" style="display:none; position:absolute; top:-6px; right:-6px; pointer-events:none; transform:scale(.9)"></span>
@@ -154,8 +154,7 @@
     </section>
 
     <section id="page-worlds" class="hidden">
-      <!-- World Post CTA — outside the BMC Worlds panel -->
-      <div class="toolbar" style="margin-bottom:16px">
+      <div class="toolbar" style="margin:12px 0 0">
         <button id="world-post-btn" class="btn members-only" type="button">World Post</button>
       </div>
 
@@ -177,7 +176,36 @@
         </div>
       </div>
 
-      <!-- Removed inline "Submit a New World" panel; now in modal -->
+      <!-- Members-only: Submit New World -->
+      <div id="world-entry-panel" class="panel members-only" style="margin-top:16px">
+        <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
+        <p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
+        <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
+        <form id="world-entry-form">
+          <div class="field">
+            <label for="weName">World name</label>
+            <input id="weName" class="input" type="text" placeholder="World title" required />
+          </div>
+          <div class="field">
+            <label for="weDesc">World description</label>
+            <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
+          </div>
+          <div class="field">
+            <label for="weImg">Image URL</label>
+            <input id="weImg" class="input" type="url" placeholder="https://..." required />
+            <div class="hint">Use a direct image link (PNG/JPG).</div>
+          </div>
+          <div class="field">
+            <label for="weUrl">World link</label>
+            <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
+          </div>
+          <div class="toolbar">
+            <button class="btn" type="submit">Publish World</button>
+            <span id="we-status" class="muted" aria-live="polite"></span>
+          </div>
+        </form>
+      </div>
+
       <div class="panel" style="margin-top:16px">
         <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
         <div id="community-worlds" class="grid-2"></div>
@@ -187,13 +215,16 @@
 
     <section id="page-members" class="hidden">
       <div class="panel">
-        <h2 class="section-title">Community Posts <span class="badge">BMC Community</span></h2>
+        <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
         <p class="muted">Only Admins and Members can post.</p>
 
-        <div class="toolbar" style="margin-bottom:12px">
-          <button id="community-post-btn" class="btn members-only" type="button">New Community Post</button>
-        </div>
-        
+        <form name="member-posts" class="members-only" id="post-form">
+          <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
+          <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
+          <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
+        </form>
+
+        <div style="margin-top:18px">
           <h3 class="section-title" style="font-size:18px">Recent Posts</h3>
           <div id="posts-list" class="list"></div>
           <div id="posts-empty" class="muted">No posts yet.</div>
@@ -230,58 +261,6 @@
       </div>
       <div class="modal-body" id="modal-body" style="padding:0"></div>
     </div>
-  </div>
-
-  <!-- Hidden modal content for World Post -->
-  <div id="world-post-template" style="display:none">
-    <div style="padding:16px">
-      <p class="muted" style="margin:6px 0 12px">Only <strong>Members</strong> can publish new worlds. Admins can view but cannot publish.</p>
-      <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
-      <form id="world-entry-form">
-        <div class="field">
-          <label for="weName">World name</label>
-          <input id="weName" class="input" type="text" placeholder="World title" required />
-        </div>
-        <div class="field">
-          <label for="weDesc">World description</label>
-          <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
-        </div>
-        <div class="field">
-          <label for="weImg">Image URL</label>
-          <input id="weImg" class="input" type="url" placeholder="https://..." required />
-          <div class="hint">Use a direct image link (PNG/JPG).</div>
-        </div>
-        <div class="field">
-          <label for="weUrl">World link</label>
-          <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
-        </div>
-        <div class="toolbar">
-          <button class="btn" id="we-submit" type="submit">Publish World</button>
-          <span id="we-status" class="muted" aria-live="polite"></span>
-        </div>
-      </form>
-    
-  <!-- Hidden modal content for Community Post -->
-  <div id="community-post-template" style="display:none">
-    <div style="padding:16px">
-      <p class="muted" style="margin:6px 0 12px">Share updates with the community. Only <strong>Admins</strong> and <strong>Members</strong> can post.</p>
-      <form id="community-post-form">
-        <div class="field">
-          <label for="cpTitle">Title</label>
-          <input id="cpTitle" class="input" type="text" placeholder="What’s new?" required />
-        </div>
-        <div class="field">
-          <label for="cpContent">Post</label>
-          <textarea id="cpContent" class="input" placeholder="Share details, links, dates…" required></textarea>
-        </div>
-        <div class="toolbar">
-          <button class="btn" id="cp-submit" type="submit">Publish Post</button>
-          <span id="cp-status" class="muted" aria-live="polite"></span>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
   </div>
 
   <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -329,28 +308,39 @@
     document.getElementById('menu-logout')?.addEventListener('click', async (e)=>{ e.stopPropagation(); menu.style.display='none'; if(window.netlifyIdentity) await window.netlifyIdentity.logout(); });
     document.addEventListener('click', (e)=>{ const wrap=document.querySelector('.profile-wrap'); if(wrap && !wrap.contains(e.target)) menu.style.display='none'; });
 
+    
     function updateAuthUI(user){
+      const worldPostBtn = document.getElementById('world-post-btn');
+
       const postForm=document.getElementById('post-form');
       const chip=document.getElementById('profile-badge');
-      const worldPostBtn = document.getElementById('world-post-btn');
-      const communityPostBtn = document.getElementById('community-post-btn');
       if(user){
+        if (worldPostBtn) worldPostBtn.style.display = '';
         document.body.classList.add('authed');
         const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
+        const worldPanel = document.getElementById('world-entry-panel');
+        const weForm = document.getElementById('world-entry-form');
+        const weBanner = document.getElementById('we-banner');
+        const isMem = roles.includes('member');
+        const isAdm = roles.includes('admin');
+        if (worldPanel) worldPanel.style.display = (isMem || isAdm) ? '' : 'none';
+        if (weForm && weBanner){
+          const btn = weForm.querySelector('button[type="submit"]');
+          if (isMem){ btn && (btn.disabled = false); weBanner.style.display='none'; }
+          else if (isAdm){ btn && (btn.disabled = true); weBanner.textContent='Admins can view this form, but only Members can publish world entries.'; weBanner.style.display='block'; }
+          else { btn && (btn.disabled = true); weBanner.textContent='Log in as a Member to publish a world.'; weBanner.style.display='block'; }
+        }
         if (postForm) postForm.style.display = hasAllowedRole(user) ? '' : 'none';
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
-        if (worldPostBtn){ worldPostBtn.style.display = (roles.includes('member') || roles.includes('admin')) ? 'inline-flex' : 'none'; }
-        if (communityPostBtn){ communityPostBtn.style.display = hasAllowedRole(user) ? 'inline-flex' : 'none'; }
       } else {
+        if (worldPostBtn) worldPostBtn.style.display = 'none';
         document.body.classList.remove('authed');
         if (postForm) postForm.style.display='none';
         const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Log in'; profileBtn.dataset.authed='0'; }
         if (menu) menu.style.display='none';
-        const worldPostBtn = document.getElementById('world-post-btn');
-      const communityPostBtn = document.getElementById('community-post-btn'); if (worldPostBtn) worldPostBtn.style.display='none';
       }
     }
     if(window.netlifyIdentity){
@@ -358,34 +348,6 @@
       window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); window.netlifyIdentity.close(); });
       window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); });
       window.netlifyIdentity.init();
-    }
-
-    
-    // --- Community Post modal wiring ---
-    function wireCommunityPostForm(){
-      const form = document.getElementById('community-post-form');
-      const status = document.getElementById('cp-status');
-      if(!form) return;
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-        const name = getPreferredDisplayName(u);
-        if(!name){ if(status){ status.textContent='Set your display name in Profile first.'; } openProfileModal(); return; }
-        const title = document.getElementById('cpTitle').value.trim();
-        const content = document.getElementById('cpContent').value.trim();
-        if(!title || !content){ if(status) status.textContent='Please complete all fields.'; return; }
-        try{
-          if(status) status.textContent='Publishing…';
-          await submitSecurePost(title, content, name);
-          if(status) status.textContent='Published!';
-          form.reset();
-          await loadPosts();
-          await loadHomeFeed();
-          setTimeout(()=>{ closeModal(); }, 600);
-        }catch(err){
-          if(status) status.textContent=err.message || 'Could not publish.';
-        }
-      }, { once: true });
     }
 
     // Modal
@@ -526,39 +488,108 @@
         });
       }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts. '+(e.message||'')+'</div>'; }
     }
+    // --- Community World Entries (Modal-based) ---
+    function openWorldPostModal(){
+      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+      const roles = rolesOf(user);
+      const isMem = roles.includes('member');
+      const isAdm = roles.includes('admin');
 
-    // --- Community World Entries ---
-    function wireWorldEntryForm(){
-      const form = document.getElementById('world-entry-form');
-      const status = document.getElementById('we-status');
-      if(!form) return;
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-        const name = getPreferredDisplayName(u);
-        if(!name){ if(status){ status.textContent='Set your display name in Profile first.'; } openProfileModal(); return; }
-        const world_name = document.getElementById('weName').value.trim();
-        const world_desc = document.getElementById('weDesc').value.trim();
-        const world_img  = document.getElementById('weImg').value.trim();
-        const world_url  = document.getElementById('weUrl').value.trim();
-        if(!world_name || !world_desc || !world_img || !world_url){ if(status) status.textContent='Please complete all fields.'; return; }
-        if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ if(status) status.textContent='URLs must start with http(s)://'; return; }
-        try{
-          if(status) status.textContent='Publishing…';
-          await submitSecurePost(world_name, world_desc, name, {
-            category: 'world_entry',
-            world_name, world_desc, world_img, world_url
-          });
-          if(status) status.textContent='Published!';
-          form.reset();
-          await loadCommunityWorlds();
-          setTimeout(()=>{ closeModal(); }, 600);
-        }catch(err){
-          console.error(err);
-          if(status) status.textContent=err.message || 'Could not publish.';
-        }
-      }, { once: true });
+      modalTitle.textContent = 'Submit a New World';
+      modalBody.innerHTML = `
+        <div style="padding:16px">
+          <p class="muted" style="margin-top:0;margin-bottom:10px">
+            Only <strong>Members</strong> can publish world entries. Admins can view but cannot publish.
+          </p>
+          <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
+          <form id="world-entry-form">
+            <div class="field">
+              <label for="weName">World name</label>
+              <input id="weName" class="input" type="text" placeholder="World title" required />
+            </div>
+            <div class="field">
+              <label for="weDesc">World description</label>
+              <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
+            </div>
+            <div class="field">
+              <label for="weImg">Image URL</label>
+              <input id="weImg" class="input" type="url" placeholder="https://..." required />
+              <div class="hint">Use a direct image link (PNG/JPG).</div>
+            </div>
+            <div class="field">
+              <label for="weUrl">World link</label>
+              <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
+            </div>
+            <div class="toolbar">
+              <button id="we-submit" class="btn" type="submit">Publish World</button>
+              <span id="we-status" class="muted" aria-live="polite"></span>
+            </div>
+          </form>
+        </div>`;
+      modal.style.display='grid'; modal.setAttribute('open','');
+
+      const weForm = document.getElementById('world-entry-form');
+      const weBanner = document.getElementById('we-banner');
+      const submitBtn = document.getElementById('we-submit');
+
+      // Role gating (mirror previous behavior)
+      if (isMem){
+        if (submitBtn) submitBtn.disabled = false;
+        if (weBanner) weBanner.style.display = 'none';
+      } else if (isAdm){
+        if (submitBtn) submitBtn.disabled = true;
+        if (weBanner){ weBanner.textContent='Admins can view this form, but only Members can publish world entries.'; weBanner.style.display='block'; }
+      } else {
+        if (worldPostBtn) worldPostBtn.style.display = 'none';
+        if (submitBtn) submitBtn.disabled = true;
+        if (weBanner){ weBanner.textContent='Log in as a Member to publish a world.'; weBanner.style.display='block'; }
+      }
+
+      if (weForm){
+        weForm.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+          const name = getPreferredDisplayName(u);
+          const status = document.getElementById('we-status');
+
+          if(!name){
+            if(status) status.textContent='Set your display name in Profile first.';
+            openProfileModal();
+            return;
+          }
+          const world_name = document.getElementById('weName').value.trim();
+          const world_desc = document.getElementById('weDesc').value.trim();
+          const world_img  = document.getElementById('weImg').value.trim();
+          const world_url  = document.getElementById('weUrl').value.trim();
+          if(!world_name || !world_desc || !world_img || !world_url){
+            if(status) status.textContent='Please complete all fields.'; return;
+          }
+          if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){
+            if(status) status.textContent='URLs must start with http(s)://'; return;
+          }
+          try{
+            if(status) status.textContent='Publishing…';
+            await submitSecurePost(world_name, world_desc, name, {
+              category: 'world_entry',
+              world_name, world_desc, world_img, world_url
+            });
+            if(status) status.textContent='Published!';
+            setTimeout(()=>{ closeModal(); loadCommunityWorlds(); }, 600);
+          }catch(err){
+            console.error(err);
+            if(status) status.textContent = err.message || 'Could not publish.';
+          }
+        });
+      }
     }
+
+    // Show/Hide World Post button and wire click
+    (function wireWorldPostButton(){
+      const btn = document.getElementById('world-post-btn');
+      if (!btn) return;
+      btn.addEventListener('click', (e)=>{ e.preventDefault(); openWorldPostModal(); });
+    })();
+
 
     async function loadCommunityWorlds(){
       const grid = document.getElementById('community-worlds');
@@ -652,53 +683,6 @@
         }catch(e){ s.textContent = e.message || 'Update failed'; }
       };
     }
-
-    // --- World Post button wiring ---
-    const worldPostBtn = document.getElementById('world-post-btn');
-      const communityPostBtn = document.getElementById('community-post-btn');
-    function setupWorldPostModalAccess(){
-      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      const roles = rolesOf(user||{});
-      const isMember = roles.includes('member');
-      const isAdmin = roles.includes('admin');
-      const banner = document.getElementById('we-banner');
-      const submitBtn = document.getElementById('we-submit');
-      if (!user){
-        if (banner){ banner.textContent='Log in as a Member to publish a world.'; banner.style.display='block'; }
-        if (submitBtn) submitBtn.disabled = true;
-        return;
-      }
-      if (isMember){
-        if (banner) banner.style.display='none';
-        if (submitBtn) submitBtn.disabled = false;
-      } else if (isAdmin){
-        if (banner){ banner.textContent='Admins can view this form, but only Members can publish world entries.'; banner.style.display='block'; }
-        if (submitBtn) submitBtn.disabled = true;
-      } else {
-        if (banner){ banner.textContent='Only Members can publish world entries.'; banner.style.display='block'; }
-        if (submitBtn) submitBtn.disabled = true;
-      }
-    }
-    
-    const communityPostBtn = document.getElementById('community-post-btn');
-    communityPostBtn?.addEventListener('click', () => {
-      const tpl = document.getElementById('community-post-template');
-      modalTitle.textContent = 'New Community Post';
-      modalBody.innerHTML = tpl.innerHTML;
-      modal.style.display = 'grid';
-      modal.setAttribute('open','');
-      wireCommunityPostForm();
-    });
-
-    worldPostBtn?.addEventListener('click', () => {
-      const tpl = document.getElementById('world-post-template');
-      modalTitle.textContent = 'World Post';
-      modalBody.innerHTML = tpl.innerHTML;
-      modal.style.display = 'grid';
-      modal.setAttribute('open','');
-      wireWorldEntryForm();
-      setupWorldPostModalAccess();
-    });
 
     // initial loads
     loadPosts();
