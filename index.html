@@ -187,21 +187,13 @@
 
     <section id="page-members" class="hidden">
       <div class="panel">
-        <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
+        <h2 class="section-title">Community Posts <span class="badge">BMC Community</span></h2>
         <p class="muted">Only Admins and Members can post.</p>
 
         <div class="toolbar" style="margin-bottom:12px">
           <button id="community-post-btn" class="btn members-only" type="button">New Community Post</button>
         </div>
-        <!-- removed inline post form; using modal instead -->
-        <!-- form name kept below as hidden netlify template -->
-        <div style="display:none">
-          <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
-          <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
-          <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
-        </div>
-
-        <div style="margin-top:18px">
+        
           <h3 class="section-title" style="font-size:18px">Recent Posts</h3>
           <div id="posts-list" class="list"></div>
           <div id="posts-empty" class="muted">No posts yet.</div>
