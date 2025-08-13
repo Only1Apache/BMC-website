@@ -154,13 +154,12 @@
       </div>
     </section>
 
-    <section id="page-worlds" class="hidden">
+    \1
       <div id="worlds-actions-top" class="toolbar members-only" style="margin:12px 0 12px; display:none; gap:10px; flex-wrap:wrap">
         <button id="open-world-modal" class="btn" type="button">Post World</button>
         <span class="muted" id="worlds-actions-hint" style="display:none">Only Members can publish world entries.</span>
       </div>
-    
-      <div class="panel">
+    <div class="panel">
         <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
         <div class="grid-2" id="worlds-grid">
           <div class="card">
@@ -179,7 +178,7 @@
       </div>
 
       <!-- Members-only: Submit New World -->
-      <div id="world-entry-panel" class="panel members-only" style="margin-top:16px; display:none">
+      <div id="world-entry-panel" class="panel members-only" style="">
         <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
         <p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
         <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
@@ -310,20 +309,27 @@
     document.getElementById('menu-logout')?.addEventListener('click', async (e)=>{ e.stopPropagation(); menu.style.display='none'; if(window.netlifyIdentity) await window.netlifyIdentity.logout(); });
     document.addEventListener('click', (e)=>{ const wrap=document.querySelector('.profile-wrap'); if(wrap && !wrap.contains(e.target)) menu.style.display='none'; });
 
-    function updateAuthUI(user){
-      const postForm=document.getElementById('post-form');
-      const chip=document.getElementById('profile-badge');
-      if(user){
-        document.body.classList.add('authed');
-        const roles=rolesOf(user);
+    \1
+        const actionsTop = document.getElementById('worlds-actions-top');
+        const openWorldBtnLocal = document.getElementById('open-world-modal');
+        const hint = document.getElementById('worlds-actions-hint');
+        if (actionsTop && openWorldBtnLocal){
+          const isMem = roles.includes('member');
+          const isAdm = roles.includes('admin');
+          actionsTop.style.display = (isMem || isAdm) ? 'flex' : 'none';
+          openWorldBtnLocal.disabled = !isMem;
+          openWorldBtnLocal.style.display = (isMem || isAdm) ? 'inline-flex' : 'none';
+          openWorldBtnLocal.title = isMem ? '' : 'Only Members can publish world entries.';
+          if (hint) hint.style.display = isMem ? 'none' : 'inline';
+        }
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
         const worldPanel = document.getElementById('world-entry-panel');
         const weForm = document.getElementById('world-entry-form');
         const weBanner = document.getElementById('we-banner');
         const isMem = roles.includes('member');
         const isAdm = roles.includes('admin');
-        if (worldPanel) worldPanel.style.display = (isMem || isAdm) ? '' : 'none';
-        if (weForm && weBanner){
+        if (worldPanel) worldPanel.style.display = "none";
+if (weForm && weBanner){
           const btn = weForm.querySelector('button[type="submit"]');
           if (isMem){ btn && (btn.disabled = false); weBanner.style.display='none'; }
           else if (isAdm){ btn && (btn.disabled = true); weBanner.textContent='Admins can view this form, but only Members can publish world entries.'; weBanner.style.display='block'; }
@@ -395,6 +401,89 @@
     }
     function closeModal(){ modalBody.innerHTML=''; modal.style.display='none'; modal.removeAttribute('open'); }
     document.querySelectorAll('.trailer-btn').forEach(btn=>btn.addEventListener('click',e=>{ e.preventDefault(); const src=btn.dataset.embed; openTrailer(src); }));
+    // --- Post World modal wiring (idempotent) ---
+    const openWorldBtn = document.getElementById('open-world-modal');
+
+    function buildWorldEntryMarkup(){
+      return `
+        <div style="padding:16px">
+          <p class="muted" style="margin-top:0">Only <strong>Members</strong> can publish new worlds. Admins can view but cannot publish.</p>
+          <form id="world-entry-form-modal">
+            <div class="field">
+              <label for="weName">World name</label>
+              <input id="weName" class="input" type="text" placeholder="World title" required />
+            </div>
+            <div class="field">
+              <label for="weDesc">World description</label>
+              <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
+            </div>
+            <div class="field">
+              <label for="weImg">Image URL</label>
+              <input id="weImg" class="input" type="url" placeholder="https://..." required />
+              <div class="hint">Use a direct image link (PNG/JPG).</div>
+            </div>
+            <div class="field">
+              <label for="weUrl">World link</label>
+              <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
+            </div>
+            <div class="toolbar">
+              <button id="wePublish" class="btn" type="submit">Publish World</button>
+              <span id="we-status" class="muted" aria-live="polite"></span>
+            </div>
+          </form>
+        </div>`;
+    }
+
+    function wireWorldEntryModal(){
+      const form = document.getElementById('world-entry-form-modal');
+      const status = document.getElementById('we-status');
+      if(!form) return;
+
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const name = getPreferredDisplayName(u);
+        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+
+        const roles = (u?.app_metadata?.roles || []).map(r=>String(r).toLowerCase());
+        const isMember = roles.includes('member');
+        if(!isMember){ status.textContent='Only members can publish world entries.'; return; }
+
+        const world_name = document.getElementById('weName').value.trim();
+        const world_desc = document.getElementById('weDesc').value.trim();
+        const world_img  = document.getElementById('weImg').value.trim();
+        const world_url  = document.getElementById('weUrl').value.trim();
+        if(!world_name || !world_desc || !world_img || !world_url){ status.textContent='Please complete all fields.'; return; }
+        if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ status.textContent='URLs must start with http(s)://'; return; }
+        try{
+          status.textContent='Publishing…';
+          await submitSecurePost(world_name, world_desc, name, {
+            category: 'world_entry',
+            world_name, world_desc, world_img, world_url
+          });
+          status.textContent='Published!';
+          setTimeout(()=>{ closeModal(); loadCommunityWorlds(); }, 600);
+        }catch(err){
+          console.error(err);
+          status.textContent=err.message || 'Could not publish.';
+        }
+      });
+    }
+
+    function openWorldEntryModal(){
+      modalTitle.textContent = 'Post a World';
+      modalBody.innerHTML = buildWorldEntryMarkup();
+      modal.style.display='grid'; modal.setAttribute('open','');
+      wireWorldEntryModal();
+    }
+
+    if(openWorldBtn){
+      openWorldBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        openWorldEntryModal();
+      });
+    }
+        
     document.getElementById('open-world-modal')?.addEventListener('click', (e)=>{ e.preventDefault(); openWorldEntryModal(); });
 
     // Posts: submit secure, delete, update
