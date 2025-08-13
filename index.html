@@ -308,14 +308,10 @@
     document.getElementById('menu-logout')?.addEventListener('click', async (e)=>{ e.stopPropagation(); menu.style.display='none'; if(window.netlifyIdentity) await window.netlifyIdentity.logout(); });
     document.addEventListener('click', (e)=>{ const wrap=document.querySelector('.profile-wrap'); if(wrap && !wrap.contains(e.target)) menu.style.display='none'; });
 
-    
     function updateAuthUI(user){
-      const worldPostBtn = document.getElementById('world-post-btn');
-
       const postForm=document.getElementById('post-form');
       const chip=document.getElementById('profile-badge');
       if(user){
-        if (worldPostBtn) worldPostBtn.style.display = '';
         document.body.classList.add('authed');
         const roles=rolesOf(user);
         const primary= roles.includes('admin') ? 'admin' : (roles.includes('member') ? 'member' : (roles[0]||'user'));
@@ -335,7 +331,6 @@
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
       } else {
-        if (worldPostBtn) worldPostBtn.style.display = 'none';
         document.body.classList.remove('authed');
         if (postForm) postForm.style.display='none';
         const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
@@ -488,108 +483,38 @@
         });
       }catch(e){ wrap.innerHTML = '<div class="muted">Could not load posts. '+(e.message||'')+'</div>'; }
     }
-    // --- Community World Entries (Modal-based) ---
-    function openWorldPostModal(){
-      const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      const roles = rolesOf(user);
-      const isMem = roles.includes('member');
-      const isAdm = roles.includes('admin');
 
-      modalTitle.textContent = 'Submit a New World';
-      modalBody.innerHTML = `
-        <div style="padding:16px">
-          <p class="muted" style="margin-top:0;margin-bottom:10px">
-            Only <strong>Members</strong> can publish world entries. Admins can view but cannot publish.
-          </p>
-          <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
-          <form id="world-entry-form">
-            <div class="field">
-              <label for="weName">World name</label>
-              <input id="weName" class="input" type="text" placeholder="World title" required />
-            </div>
-            <div class="field">
-              <label for="weDesc">World description</label>
-              <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
-            </div>
-            <div class="field">
-              <label for="weImg">Image URL</label>
-              <input id="weImg" class="input" type="url" placeholder="https://..." required />
-              <div class="hint">Use a direct image link (PNG/JPG).</div>
-            </div>
-            <div class="field">
-              <label for="weUrl">World link</label>
-              <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
-            </div>
-            <div class="toolbar">
-              <button id="we-submit" class="btn" type="submit">Publish World</button>
-              <span id="we-status" class="muted" aria-live="polite"></span>
-            </div>
-          </form>
-        </div>`;
-      modal.style.display='grid'; modal.setAttribute('open','');
-
-      const weForm = document.getElementById('world-entry-form');
-      const weBanner = document.getElementById('we-banner');
-      const submitBtn = document.getElementById('we-submit');
-
-      // Role gating (mirror previous behavior)
-      if (isMem){
-        if (submitBtn) submitBtn.disabled = false;
-        if (weBanner) weBanner.style.display = 'none';
-      } else if (isAdm){
-        if (submitBtn) submitBtn.disabled = true;
-        if (weBanner){ weBanner.textContent='Admins can view this form, but only Members can publish world entries.'; weBanner.style.display='block'; }
-      } else {
-        if (worldPostBtn) worldPostBtn.style.display = 'none';
-        if (submitBtn) submitBtn.disabled = true;
-        if (weBanner){ weBanner.textContent='Log in as a Member to publish a world.'; weBanner.style.display='block'; }
-      }
-
-      if (weForm){
-        weForm.addEventListener('submit', async (e)=>{
-          e.preventDefault();
-          const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-          const name = getPreferredDisplayName(u);
-          const status = document.getElementById('we-status');
-
-          if(!name){
-            if(status) status.textContent='Set your display name in Profile first.';
-            openProfileModal();
-            return;
-          }
-          const world_name = document.getElementById('weName').value.trim();
-          const world_desc = document.getElementById('weDesc').value.trim();
-          const world_img  = document.getElementById('weImg').value.trim();
-          const world_url  = document.getElementById('weUrl').value.trim();
-          if(!world_name || !world_desc || !world_img || !world_url){
-            if(status) status.textContent='Please complete all fields.'; return;
-          }
-          if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){
-            if(status) status.textContent='URLs must start with http(s)://'; return;
-          }
-          try{
-            if(status) status.textContent='Publishing…';
-            await submitSecurePost(world_name, world_desc, name, {
-              category: 'world_entry',
-              world_name, world_desc, world_img, world_url
-            });
-            if(status) status.textContent='Published!';
-            setTimeout(()=>{ closeModal(); loadCommunityWorlds(); }, 600);
-          }catch(err){
-            console.error(err);
-            if(status) status.textContent = err.message || 'Could not publish.';
-          }
-        });
-      }
-    }
-
-    // Show/Hide World Post button and wire click
-    (function wireWorldPostButton(){
-      const btn = document.getElementById('world-post-btn');
-      if (!btn) return;
-      btn.addEventListener('click', (e)=>{ e.preventDefault(); openWorldPostModal(); });
+    // --- Community World Entries ---
+    (function wireWorldEntry(){
+      const form = document.getElementById('world-entry-form');
+      const status = document.getElementById('we-status');
+      if(!form) return;
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const name = getPreferredDisplayName(u);
+        if(!name){ status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+        const world_name = document.getElementById('weName').value.trim();
+        const world_desc = document.getElementById('weDesc').value.trim();
+        const world_img  = document.getElementById('weImg').value.trim();
+        const world_url  = document.getElementById('weUrl').value.trim();
+        if(!world_name || !world_desc || !world_img || !world_url){ status.textContent='Please complete all fields.'; return; }
+        if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ status.textContent='URLs must start with http(s)://'; return; }
+        try{
+          status.textContent='Publishing…';
+          await submitSecurePost(world_name, world_desc, name, {
+            category: 'world_entry',
+            world_name, world_desc, world_img, world_url
+          });
+          status.textContent='Published!';
+          form.reset();
+          await loadCommunityWorlds();
+        }catch(err){
+          console.error(err);
+          status.textContent=err.message || 'Could not publish.';
+        }
+      });
     })();
-
 
     async function loadCommunityWorlds(){
       const grid = document.getElementById('community-worlds');
