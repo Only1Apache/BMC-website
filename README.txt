@@ -28,3 +28,23 @@ To modify placement or behavior:
 - Edit the toolbar markup injected after `<section id="page-worlds">` in `index.html`.
 - Adjust the JS at the bottom of the file to change how the modal content is populated.
 
+
+
+---
+
+## Submit New World Button & Modal
+- Added a **Submit New World** button between the Worlds page header and the BMC Worlds panel.
+- This button is only visible to logged-in Members (enabled) and Admins (disabled with tooltip), hidden for guests.
+- Clicking the button opens a modal containing the hidden "Submit a New World" form.
+- The original inline panel is still in the HTML but hidden via `display:none`.
+- The form submission is handled by the same existing scripts (`submit-post.js`).
+- Button is responsive and spans full width on small screens.
+
+
+
+---
+## Submit New World (Modal Flow)
+- The inline "Submit a New World" panel is kept in the HTML but permanently hidden via CSS.
+- A **Submit New World** button appears below the Worlds page title. Clicking it opens a modal that clones the hidden panel content.
+- The modal form submits through the existing `/.netlify/functions/submit-post` function with `category: "world_entry"`. Backend still enforces role rules (Members only). 
+- To change placement, search for `#worlds-actions-top` in `index.html`. To tweak modal wiring, look for the comment `Submit New World: open modal and wire handlers` near the bottom of the main script.

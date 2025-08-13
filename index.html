@@ -64,7 +64,11 @@
     .sm-btn{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.6);color:#e5e7eb;cursor:pointer;font-size:12px}
     .sm-btn.danger{border-color:rgba(255,0,102,.35);background:rgba(76,0,20,.6)}
     #modal-overlay{pointer-events:none} #modal-overlay[open]{pointer-events:auto}
-  </style>
+  
+    /* Keep inline world-entry panel hidden; modal is the new entry point */
+    #world-entry-panel{display:none !important}
+    @media(max-width:860px){#worlds-actions-top .btn{width:100%}}
+</style>
 </head>
 <body>
   <header>
@@ -154,9 +158,12 @@
       </div>
     </section>
 
-    <section id="page-worlds" class="hidden">
-      <div class="panel">
-        <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
+    \1
+
+<div id="worlds-actions-top" class="toolbar members-only" style="margin:12px 0; gap:10px; flex-wrap:wrap">
+  <button id="open-world-modal" class="btn" type="button">Submit New World</button>
+</div>
+
         <div class="grid-2" id="worlds-grid">
           <div class="card">
             <div class="world-thumb" id="world-thumb-ora" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
@@ -174,7 +181,7 @@
       </div>
 
       <!-- Members-only: Submit New World -->
-      <div id="world-entry-panel" class="panel members-only" style="margin-top:16px" style="display:none">
+      <div id="world-entry-panel" class="panel members-only" style="margin-top:16px" style="display:none" style="display:none">
         <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
         <p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
         <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
@@ -610,6 +617,55 @@
     loadPosts();
     loadHomeFeed();
 
+
+    // --- Submit New World: open modal and wire handlers (scoped to modal) ---
+    (function(){
+      const openBtn = document.getElementById('open-world-modal');
+      if (!openBtn) return;
+      openBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const templatePanel = document.getElementById('world-entry-panel');
+        if (!templatePanel) return;
+        modalTitle.textContent = 'Submit a New World';
+        modalBody.innerHTML = templatePanel.innerHTML;
+        modal.style.display='grid';
+        modal.setAttribute('open','');
+        // Wire submit handler inside modal only
+        const form = modalBody.querySelector('#world-entry-form');
+        const status = modalBody.querySelector('#we-status');
+        if(!form) return;
+        form.addEventListener('submit', async (ev)=>{
+          ev.preventDefault();
+          const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+          const get = (sel) => (modalBody.querySelector(sel)?.value || '').trim();
+          const name = (function(){ 
+            if(!u) return ''; 
+            const meta = (u && (u.user_metadata || {})) || {}; 
+            return (meta.displayName || meta.full_name || localStorage.getItem('bmc_display_name') || '').trim();
+          })();
+          if(!name){ if(status) status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+          const world_name = get('#weName');
+          const world_desc = get('#weDesc');
+          const world_img  = get('#weImg');
+          const world_url  = get('#weUrl');
+          if(!world_name || !world_desc || !world_img || !world_url){ if(status) status.textContent='Please complete all fields.'; return; }
+          if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ if(status) status.textContent='URLs must start with http(s)://'; return; }
+          try{
+            if(status) status.textContent='Publishing…';
+            await submitSecurePost(world_name, world_desc, name, {
+              category: 'world_entry',
+              world_name, world_desc, world_img, world_url
+            });
+            if(status) status.textContent='Published!';
+            setTimeout(()=>{ closeModal(); loadCommunityWorlds(); }, 600);
+          }catch(err){
+            if(status) status.textContent = (err && err.message) || 'Could not publish.';
+          }
+        }, { once: true });
+      });
+    })();
+
+
     // year
     const yearEl=document.getElementById('year'); if (yearEl) yearEl.textContent=new Date().getFullYear();
   });
@@ -619,6 +675,16 @@ document.getElementById('open-world-modal')?.addEventListener('click', () => {
   const worldPanel = document.getElementById('world-entry-panel');
   if (!worldPanel) return;
   modalTitle.textContent = 'Post a World';
+  modalBody.innerHTML = worldPanel.innerHTML;
+  modal.style.display='grid';
+  modal.setAttribute('open','');
+});
+</script>
+<script>
+document.getElementById('open-world-modal')?.addEventListener('click', () => {
+  const worldPanel = document.getElementById('world-entry-panel');
+  if (!worldPanel) return;
+  modalTitle.textContent = 'Submit New World';
   modalBody.innerHTML = worldPanel.innerHTML;
   modal.style.display='grid';
   modal.setAttribute('open','');
