@@ -73,7 +73,7 @@
         <button class="tab active" data-route="home">Home</button>
         <button class="tab" data-route="assets">Virtual Assets</button>
         <button class="tab explore-cta" data-route="worlds">Explore Worlds</button>
-        <button class="tab" data-route="members">Members</button>
+        <button class="tab" data-route="members">Community</button>
         <span class="profile-wrap" style="position:relative; display:inline-block">
           <button id="profile-btn" class="login-btn" type="button" style="display:inline-block">Log in</button>
           <span id="profile-badge" class="role-badge" style="display:none; position:absolute; top:-6px; right:-6px; pointer-events:none; transform:scale(.9)"></span>
@@ -190,11 +190,16 @@
         <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
         <p class="muted">Only Admins and Members can post.</p>
 
-        <form name="member-posts" class="members-only" id="post-form">
+        <div class="toolbar" style="margin-bottom:12px">
+          <button id="community-post-btn" class="btn members-only" type="button">New Community Post</button>
+        </div>
+        <!-- removed inline post form; using modal instead -->
+        <!-- form name kept below as hidden netlify template -->
+        <div style="display:none">
           <div class="field"><label for="title">Title</label><input class="input" id="title" name="title" type="text" placeholder="What’s new?" required /></div>
           <div class="field"><label for="content">Post</label><textarea id="content" name="content" placeholder="Share details, links, dates…" required></textarea></div>
           <div class="toolbar"><button class="btn" type="submit">Post</button><span id="post-status" class="muted" aria-live="polite"></span></div>
-        </form>
+        </div>
 
         <div style="margin-top:18px">
           <h3 class="section-title" style="font-size:18px">Recent Posts</h3>
@@ -263,7 +268,28 @@
           <span id="we-status" class="muted" aria-live="polite"></span>
         </div>
       </form>
+    
+  <!-- Hidden modal content for Community Post -->
+  <div id="community-post-template" style="display:none">
+    <div style="padding:16px">
+      <p class="muted" style="margin:6px 0 12px">Share updates with the community. Only <strong>Admins</strong> and <strong>Members</strong> can post.</p>
+      <form id="community-post-form">
+        <div class="field">
+          <label for="cpTitle">Title</label>
+          <input id="cpTitle" class="input" type="text" placeholder="What’s new?" required />
+        </div>
+        <div class="field">
+          <label for="cpContent">Post</label>
+          <textarea id="cpContent" class="input" placeholder="Share details, links, dates…" required></textarea>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="cp-submit" type="submit">Publish Post</button>
+          <span id="cp-status" class="muted" aria-live="polite"></span>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
   </div>
 
   <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -315,6 +341,7 @@
       const postForm=document.getElementById('post-form');
       const chip=document.getElementById('profile-badge');
       const worldPostBtn = document.getElementById('world-post-btn');
+      const communityPostBtn = document.getElementById('community-post-btn');
       if(user){
         document.body.classList.add('authed');
         const roles=rolesOf(user);
@@ -323,13 +350,15 @@
         if (chip){ chip.textContent = primary.charAt(0).toUpperCase()+primary.slice(1); chip.className = `role-badge role-${primary}`; chip.style.display='inline-block'; }
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Profile ▾'; profileBtn.dataset.authed='1'; }
         if (worldPostBtn){ worldPostBtn.style.display = (roles.includes('member') || roles.includes('admin')) ? 'inline-flex' : 'none'; }
+        if (communityPostBtn){ communityPostBtn.style.display = hasAllowedRole(user) ? 'inline-flex' : 'none'; }
       } else {
         document.body.classList.remove('authed');
         if (postForm) postForm.style.display='none';
         const chip=document.getElementById('profile-badge'); if (chip) chip.style.display='none';
         if (profileBtn){ profileBtn.style.display='inline-block'; profileBtn.textContent='Log in'; profileBtn.dataset.authed='0'; }
         if (menu) menu.style.display='none';
-        const worldPostBtn = document.getElementById('world-post-btn'); if (worldPostBtn) worldPostBtn.style.display='none';
+        const worldPostBtn = document.getElementById('world-post-btn');
+      const communityPostBtn = document.getElementById('community-post-btn'); if (worldPostBtn) worldPostBtn.style.display='none';
       }
     }
     if(window.netlifyIdentity){
@@ -337,6 +366,34 @@
       window.netlifyIdentity.on('login', (u)=>{ updateAuthUI(u); window.netlifyIdentity.close(); });
       window.netlifyIdentity.on('logout', ()=>{ updateAuthUI(null); });
       window.netlifyIdentity.init();
+    }
+
+    
+    // --- Community Post modal wiring ---
+    function wireCommunityPostForm(){
+      const form = document.getElementById('community-post-form');
+      const status = document.getElementById('cp-status');
+      if(!form) return;
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+        const name = getPreferredDisplayName(u);
+        if(!name){ if(status){ status.textContent='Set your display name in Profile first.'; } openProfileModal(); return; }
+        const title = document.getElementById('cpTitle').value.trim();
+        const content = document.getElementById('cpContent').value.trim();
+        if(!title || !content){ if(status) status.textContent='Please complete all fields.'; return; }
+        try{
+          if(status) status.textContent='Publishing…';
+          await submitSecurePost(title, content, name);
+          if(status) status.textContent='Published!';
+          form.reset();
+          await loadPosts();
+          await loadHomeFeed();
+          setTimeout(()=>{ closeModal(); }, 600);
+        }catch(err){
+          if(status) status.textContent=err.message || 'Could not publish.';
+        }
+      }, { once: true });
     }
 
     // Modal
@@ -606,6 +663,7 @@
 
     // --- World Post button wiring ---
     const worldPostBtn = document.getElementById('world-post-btn');
+      const communityPostBtn = document.getElementById('community-post-btn');
     function setupWorldPostModalAccess(){
       const user = window.netlifyIdentity && window.netlifyIdentity.currentUser();
       const roles = rolesOf(user||{});
@@ -629,6 +687,17 @@
         if (submitBtn) submitBtn.disabled = true;
       }
     }
+    
+    const communityPostBtn = document.getElementById('community-post-btn');
+    communityPostBtn?.addEventListener('click', () => {
+      const tpl = document.getElementById('community-post-template');
+      modalTitle.textContent = 'New Community Post';
+      modalBody.innerHTML = tpl.innerHTML;
+      modal.style.display = 'grid';
+      modal.setAttribute('open','');
+      wireCommunityPostForm();
+    });
+
     worldPostBtn?.addEventListener('click', () => {
       const tpl = document.getElementById('world-post-template');
       modalTitle.textContent = 'World Post';
