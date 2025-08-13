@@ -48,3 +48,11 @@ To modify placement or behavior:
 - A **Submit New World** button appears below the Worlds page title. Clicking it opens a modal that clones the hidden panel content.
 - The modal form submits through the existing `/.netlify/functions/submit-post` function with `category: "world_entry"`. Backend still enforces role rules (Members only). 
 - To change placement, search for `#worlds-actions-top` in `index.html`. To tweak modal wiring, look for the comment `Submit New World: open modal and wire handlers` near the bottom of the main script.
+
+
+---
+## Worlds Modal Entry (Submit New World)
+- Inline `#world-entry-panel` remains as a hidden template.
+- Button `#open-world-modal` (text: "Submit New World") sits under the Worlds header.
+- The modal clones that template and submits via `/.netlify/functions/submit-post` (Members-only enforced by backend).
+- Edit locations: CSS rule near </style>, toolbar markup `#worlds-actions-top`, JS block named "Submit New World modal (safe & scoped)".

@@ -217,6 +217,67 @@
       </div>
     </section>
 
+    
+<section id="page-worlds" class="hidden">
+  <div class="panel">
+    <h2 class="section-title">BMC Worlds <span class="badge">Meta Horizon Worlds</span></h2>
+    <div id="worlds-actions-top" class="toolbar members-only" style="margin:12px 0; gap:10px; flex-wrap:wrap">
+      <button id="open-world-modal" class="btn" type="button">Submit New World</button>
+    </div>
+    <div class="grid-2" id="worlds-grid">
+      <div class="card">
+        <div class="world-thumb" id="world-thumb-ora" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
+        <h3 style="margin-top:0">Outer Rim Arcade</h3>
+        <p class="muted">All New Trimesh Layout • Mobile Dance Floor • New Optimized World.</p>
+        <div class="toolbar"><a class="btn" href="https://horizon.meta.com/world/520702641129652" target="_blank" rel="noopener">Explore World</a><a class="btn trailer-btn" data-embed="https://www.instagram.com/reel/DHCbjn0M2pf/embed" href="#" role="button">Trailer</a></div>
+      </div>
+      <div class="card">
+        <div class="world-thumb" id="world-thumb-hf" style="width:100%;aspect-ratio:16/9;background:#0a1228 center/cover no-repeat;border-radius:12px;margin-bottom:10px"></div>
+        <h3 style="margin-top:0">High Fashion</h3>
+        <p class="muted">Realistic, unique clothing in the Bettah Meta Mall.</p>
+        <div class="toolbar"><a class="btn" href="https://horizon.meta.com/world/689215400945041" target="_blank" rel="noopener">Explore World</a><a class="btn trailer-btn" data-embed="https://www.instagram.com/reel/DL3gueWsmwL/embed" href="#" role="button">Trailer</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Members-only: Submit New World (hidden template for modal) -->
+  <div id="world-entry-panel" class="panel members-only" style="margin-top:16px">
+    <h3 class="section-title" style="font-size:18px">Submit a New World</h3>
+    <p class="muted" style="margin-top:6px;margin-bottom:10px">Only <strong>Members</strong> can publish new worlds. Admins can manage entries but cannot create them. Include a clear name, a short description, a direct image URL, and the world link.</p>
+    <div id="we-banner" class="muted" style="margin:6px 0 12px; display:none"></div>
+    <form id="world-entry-form">
+      <div class="field">
+        <label for="weName">World name</label>
+        <input id="weName" class="input" type="text" placeholder="World title" required />
+      </div>
+      <div class="field">
+        <label for="weDesc">World description</label>
+        <textarea id="weDesc" class="input" placeholder="Brief description" required></textarea>
+      </div>
+      <div class="field">
+        <label for="weImg">Image URL</label>
+        <input id="weImg" class="input" type="url" placeholder="https://..." required />
+        <div class="hint">Use a direct image link (PNG/JPG).</div>
+      </div>
+      <div class="field">
+        <label for="weUrl">World link</label>
+        <input id="weUrl" class="input" type="url" placeholder="https://horizon.meta.com/world/..." required />
+      </div>
+      <div class="toolbar">
+        <button class="btn" type="submit">Publish World</button>
+        <span id="we-status" class="muted" aria-live="polite"></span>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <h3 class="section-title" style="font-size:18px">Community Worlds</h3>
+    <div id="community-worlds" class="grid-2"></div>
+    <div id="community-worlds-empty" class="muted">No community worlds yet.</div>
+  </div>
+</section>
+
+
     <section id="page-members" class="hidden">
       <div class="panel">
         <h2 class="section-title">Member Posts <span class="badge">BMC Community</span></h2>
@@ -662,6 +723,51 @@
             if(status) status.textContent = (err && err.message) || 'Could not publish.';
           }
         }, { once: true });
+      });
+    })();
+
+
+
+    // --- Submit New World modal (safe & scoped) ---
+    (function(){
+      const btn = document.getElementById('open-world-modal');
+      if(!btn) return;
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const template = document.getElementById('world-entry-panel');
+        if(!template) return;
+        modalTitle.textContent = 'Submit a New World';
+        modalBody.innerHTML = template.innerHTML;
+        modal.style.display='grid'; modal.setAttribute('open','');
+
+        const form   = modalBody.querySelector('#world-entry-form');
+        const status = modalBody.querySelector('#we-status');
+        if(!form) return;
+
+        form.addEventListener('submit', async (ev)=>{
+          ev.preventDefault();
+          const u = window.netlifyIdentity && window.netlifyIdentity.currentUser();
+          const meta = (u && (u.user_metadata||{})) || {};
+          const displayName = (meta.displayName || meta.full_name || localStorage.getItem('bmc_display_name') || '').trim();
+          if(!displayName){ if(status) status.textContent='Set your display name in Profile first.'; openProfileModal(); return; }
+
+          const get = sel => (modalBody.querySelector(sel)?.value || '').trim();
+          const world_name = get('#weName'), world_desc = get('#weDesc'), world_img = get('#weImg'), world_url = get('#weUrl');
+          if(!world_name || !world_desc || !world_img || !world_url){ if(status) status.textContent='Please complete all fields.'; return; }
+          if(!/^https?:\/\//i.test(world_img) || !/^https?:\/\//i.test(world_url)){ if(status) status.textContent='URLs must start with http(s)://'; return; }
+
+          try{
+            if(status) status.textContent='Publishing…';
+            await submitSecurePost(world_name, world_desc, displayName, {
+              category:'world_entry',
+              world_name, world_desc, world_img, world_url
+            });
+            if(status) status.textContent='Published!';
+            setTimeout(()=>{ closeModal(); loadCommunityWorlds(); }, 600);
+          }catch(err){
+            if(status) status.textContent = (err and err.message) or 'Could not publish.';
+          }
+        }, { once:true });
       });
     })();
 
